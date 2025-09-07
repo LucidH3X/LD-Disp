@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2025-09-07T23:43:06.145Z",
+  "generatedAt": "2025-09-07T23:49:07.325Z",
   "from": "2025-09-01",
   "to": "now",
   "allianceID": 498125261,
   "regionID": 10000035,
   "goalISK": 500000000000,
   "totals": {
-    "isk": 10721906412,
-    "ships": 150,
-    "goalPct": 2.14
+    "isk": 10743420320,
+    "ships": 151,
+    "goalPct": 2.15
   },
   "topISK": [
     {
