@@ -3,7 +3,7 @@ name: Build summary
 
 on:
   schedule:
-    - cron: "*/30 * * * *"   # every 30 minutes
+    - cron: "*/10 * * * *"   # every 10 minutes
   workflow_dispatch:
 
 permissions:
@@ -26,3 +26,4 @@ jobs:
           git add data/summary.json
           git commit -m "update summary [skip ci]" || echo "nothing to commit"
           git push
+
