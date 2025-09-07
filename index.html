@@ -1,332 +1,344 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>TEST Alliance – Deployment Tracker</title>
-    <meta name="color-scheme" content="dark light" />
-    <style>
-      :root { --w: 1100px; --pad: 1rem; }
-      * { box-sizing: border-box; }
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif; margin: 0; }
-      header { position: sticky; top: 0; background: canvas; border-bottom: 1px solid color-mix(in oklab, CanvasText 20%, transparent); padding: .75rem var(--pad); z-index: 10; }
-      .wrap { max-width: var(--w); margin: 0 auto; padding: 0 var(--pad); }
-      .row { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
-      main { padding: 1rem 0 3rem; }
-      .muted { opacity: .7; font-size: .92rem; }
-      .card { border: 1px solid color-mix(in oklab, CanvasText 20%, transparent); border-radius: 1rem; padding: 1rem; background: canvas; }
-      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
-      table { width: 100%; border-collapse: collapse; font-size: .95rem; }
-      th, td { padding: .5rem .4rem; border-bottom: 1px solid color-mix(in oklab, CanvasText 15%, transparent); text-align: left; }
-      .right { text-align: right; }
-      button { font: inherit; padding: .5rem .8rem; border-radius: .6rem; border: 1px solid color-mix(in oklab, CanvasText 25%, transparent); background: canvas; color: CanvasText; }
-      .bar { height: 10px; border-radius: 999px; border: 1px solid color-mix(in oklab, CanvasText 20%, transparent); }
-      .bar > div { height: 100%; border-radius: 999px; background: CanvasText; opacity: .2; }
-      .tiny { font-size: .82rem; }
-    </style>
-  </head>
-  <body>
-    <header>
-      <div class="wrap row">
-        <h1 id="title">TEST Alliance – Deployment Tracker</h1>
-        <span id="status" class="muted">idle</span>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TEST Alliance – Deployment Tracker</title>
+<meta name="color-scheme" content="dark light" />
+<style>
+  :root { --w: 1100px; --pad: 1rem; }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif; margin: 0; }
+  header { position: sticky; top: 0; background: canvas; border-bottom: 1px solid color-mix(in oklab, CanvasText 20%, transparent); padding: .75rem var(--pad); z-index: 10; }
+  .wrap { max-width: var(--w); margin: 0 auto; padding: 0 var(--pad); }
+  .row { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+  main { padding: 1rem 0 3rem; }
+  .muted { opacity: .7; font-size: .92rem; }
+  .card { border: 1px solid color-mix(in oklab, CanvasText 20%, transparent); border-radius: 1rem; padding: 1rem; background: canvas; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+  table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+  th, td { padding: .5rem .4rem; border-bottom: 1px solid color-mix(in oklab, CanvasText 15%, transparent); text-align: left; }
+  .right { text-align: right; }
+  button { font: inherit; padding: .5rem .8rem; border-radius: .6rem; border: 1px solid color-mix(in oklab, CanvasText 25%, transparent); background: canvas; color: CanvasText; }
+  .bar { height: 10px; border-radius: 999px; border: 1px solid color-mix(in oklab, CanvasText 20%, transparent); }
+  .bar > div { height: 100%; border-radius: 999px; background: CanvasText; opacity: .2; }
+  .tiny { font-size: .82rem; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap row">
+    <h1 id="title">TEST Alliance – Deployment Tracker</h1>
+    <span id="status" class="muted">idle</span>
+  </div>
+  <div class="wrap row" style="margin-top:.5rem">
+    <button id="build">Build (from start → now)</button>
+    <button id="stop">Stop</button>
+    <button id="clear">Clear cache</button>
+    <span class="muted">Alliance: <code id="aid">?</code></span>
+    <span class="muted">Region: <code id="rid">?</code> <span id="rname" class="muted"></span></span>
+    <span class="muted">Window: <code id="win">from → now</code></span>
+    <span class="muted tiny">zKB pages: <code id="pages">0</code></span>
+    <span class="muted tiny">ESI calls: <code id="esicalls">0</code></span>
+    <span class="muted tiny">Rows: <code id="rows">0</code></span>
+    <span class="muted tiny">Name batches: <code id="names">0</code></span>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="grid" style="margin-bottom:1rem">
+    <div class="card">
+      <strong>Overview</strong>
+      <div style="height:.5rem"></div>
+      <div class="row" style="justify-content: space-between;">
+        <div class="muted">ISK killed</div>
+        <div id="iskKilled">–</div>
       </div>
-      <div class="wrap row" style="margin-top:.5rem">
-        <button id="build">Build (from start → now)</button>
-        <button id="stop" class="danger">Stop</button>
-        <button id="clear" class="danger">Clear cache</button>
-        <span class="muted">Alliance: <code id="aid">?</code></span>
-        <span class="muted">Region: <code id="rid">?</code> <span id="rname" class="muted"></span></span>
-        <span class="muted">Window: <code id="win">from → now</code></span>
-        <span class="muted tiny">Pages: <code id="pages">0</code></span>
-        <span class="muted tiny">Name batches: <code id="names">0</code></span>
-        <span class="muted tiny">Rows: <code id="rows">0</code></span>
+      <div class="row" style="justify-content: space-between;">
+        <div class="muted">Ships killed</div>
+        <div id="shipsKilled">–</div>
       </div>
-    </header>
+      <div style="height:.5rem"></div>
+      <div class="bar"><div id="goalBar" style="width:0%"></div></div>
+      <div class="row" style="justify-content: space-between; margin-top:.4rem">
+        <div class="muted">Goal</div>
+        <div><span id="goalPct">0%</span> (<span id="iskGoal">–</span>)</div>
+      </div>
+    </div>
+  </section>
 
-    <main class="wrap">
-      <section class="grid" style="margin-bottom:1rem">
-        <div class="card">
-          <strong>Overview</strong>
-          <div style="height:.5rem"></div>
-          <div class="row" style="justify-content: space-between;">
-            <div class="muted">ISK killed</div>
-            <div id="iskKilled">–</div>
-          </div>
-          <div class="row" style="justify-content: space-between;">
-            <div class="muted">Ships killed</div>
-            <div id="shipsKilled">–</div>
-          </div>
-          <div style="height:.5rem"></div>
-          <div class="bar"><div id="goalBar" style="width:0%"></div></div>
-          <div class="row" style="justify-content: space-between; margin-top:.4rem">
-            <div class="muted">Goal</div>
-            <div><span id="goalPct">0%</span> (<span id="iskGoal">–</span>)</div>
-          </div>
-        </div>
-      </section>
+  <section class="grid">
+    <div class="card">
+      <strong>Top 10 — Solo kills</strong>
+      <div style="max-height:420px;overflow:auto;margin-top:.4rem">
+        <table id="soloTable">
+          <thead><tr><th>#</th><th>Pilot</th><th class="right">Solo</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
 
-      <section class="grid">
-        <div class="card">
-          <strong>Top 10 — Solo kills</strong>
-          <div style="max-height:420px;overflow:auto;margin-top:.4rem">
-            <table id="soloTable">
-              <thead><tr><th>#</th><th>Pilot</th><th class="right">Solo</th></tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
+    <div class="card">
+      <strong>Top 10 — ISK destroyed</strong>
+      <div style="max-height:420px;overflow:auto;margin-top:.4rem">
+        <table id="iskTable">
+          <thead><tr><th>#</th><th>Pilot</th><th class="right">ISK</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
 
-        <div class="card">
-          <strong>Top 10 — ISK destroyed</strong>
-          <div style="max-height:420px;overflow:auto;margin-top:.4rem">
-            <table id="iskTable">
-              <thead><tr><th>#</th><th>Pilot</th><th class="right">ISK</th></tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-    </main>
+<script type="module">
+  // ---------- utils ----------
+  const $  = (s) => document.querySelector(s);
+  const fmtISK = (n) => new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(Math.round(n)) + ' ISK';
+  const fmtNum = (n) => new Intl.NumberFormat().format(n);
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-    <script type="module">
-      // ------- tiny utils -------
-      const $  = (s) => document.querySelector(s);
-      const fmtISK = (n) => new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(Math.round(n)) + ' ISK';
-      const fmtNum = (n) => new Intl.NumberFormat().format(n);
-      const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+  // DOM
+  const statusEl = $('#status');
+  const iskKilledEl = $('#iskKilled');
+  const shipsKilledEl = $('#shipsKilled');
+  const iskGoalEl = $('#iskGoal');
+  const goalPctEl = $('#goalPct');
+  const goalBarEl = $('#goalBar');
+  const soloTBody = document.querySelector('#soloTable tbody');
+  const iskTBody  = document.querySelector('#iskTable tbody');
+  const aidEl = $('#aid'), ridEl = $('#rid'), rnameEl = $('#rname'), winEl = $('#win');
+  const pagesEl = $('#pages'), namesEl = $('#names'), rowsEl = $('#rows'), esiEl = $('#esicalls');
 
-      // DOM refs
-      const statusEl = $('#status');
-      const iskKilledEl = $('#iskKilled');
-      const shipsKilledEl = $('#shipsKilled');
-      const iskGoalEl = $('#iskGoal');
-      const goalPctEl = $('#goalPct');
-      const goalBarEl = $('#goalBar');
-      const soloTBody = document.querySelector('#soloTable tbody');
-      const iskTBody  = document.querySelector('#iskTable tbody');
-      const aidEl = $('#aid'), ridEl = $('#rid'), rnameEl = $('#rname'), winEl = $('#win');
-      const pagesEl = $('#pages'), namesEl = $('#names'), rowsEl = $('#rows');
+  // config
+  let CFG = {
+    title: 'TEST Alliance – Deployment Tracker',
+    allianceID: 498125261,
+    goalISK: 500_000_000_000,
+    regionID: 10000035,
+    regionName: 'Deklein',
+    from: '2025-09-01',
+    rateMs: 400,
+    pageCap: 10,
+    esiRateMs: 250,
+    esiCap: 150
+  };
+  try { const cfg = await (await fetch('./site.json', { cache: 'no-store' })).json(); CFG = { ...CFG, ...(cfg||{}) }; } catch {}
 
-      // ------- config -------
-      let CFG = {
-        title: 'TEST Alliance – Deployment Tracker',
-        allianceID: 498125261,
-        goalISK: 500_000_000_000,
-        regionID: 10000035,
-        regionName: 'Deklein',
-        from: '2025-09-01',
-        rateMs: 600,     // slower = nicer to zKB
-        pageCap: 10      // raise later
-      };
-      try { const cfg = await (await fetch('./site.json', { cache: 'no-store' })).json(); CFG = { ...CFG, ...(cfg||{}) }; } catch {}
+  document.title = CFG.title || document.title;
+  $('#title').textContent = CFG.title || $('#title').textContent;
+  aidEl.textContent = String(CFG.allianceID);
+  ridEl.textContent = String(CFG.regionID);
+  rnameEl.textContent = CFG.regionName ? `(${CFG.regionName})` : '';
+  winEl.textContent = `${CFG.from} → now`;
+  iskGoalEl.textContent = fmtISK(CFG.goalISK);
 
-      document.title = CFG.title || document.title;
-      $('#title').textContent = CFG.title || $('#title').textContent;
-      aidEl.textContent = String(CFG.allianceID);
-      ridEl.textContent = String(CFG.regionID);
-      rnameEl.textContent = CFG.regionName ? `(${CFG.regionName})` : '';
-      winEl.textContent = `${CFG.from} → now`;
-      iskGoalEl.textContent = fmtISK(CFG.goalISK);
+  // time helpers
+  const startDate = CFG.from ? new Date(`${CFG.from}T00:00:00Z`) : null;
+  const parseKillTime = (s) => {
+    const raw = String(s || '');
+    const iso = raw.includes('T') ? raw : raw.replace(' ', 'T') + (raw.endsWith('Z') ? '' : 'Z');
+    const t = new Date(iso);
+    return isNaN(t) ? null : t;
+  };
+  function monthList(fromDate, toDate) {
+    const out = [];
+    const a = new Date(Date.UTC(fromDate.getUTCFullYear(), fromDate.getUTCMonth(), 1));
+    const b = new Date(Date.UTC(toDate.getUTCFullYear(), toDate.getUTCMonth(), 1));
+    while (a <= b) { out.push({ y: a.getUTCFullYear(), m: a.getUTCMonth() + 1 }); a.setUTCMonth(a.getUTCMonth() + 1); }
+    return out;
+  }
 
-      // ------- time helpers -------
-      const startDate = CFG.from ? new Date(`${CFG.from}T00:00:00Z`) : null;
-      const parseKillTime = (s) => {
-        const raw = String(s || '');
-        const iso = raw.includes('T') ? raw : raw.replace(' ', 'T') + (raw.endsWith('Z') ? '' : 'Z');
-        const t = new Date(iso);
-        return isNaN(t) ? null : t;
-      };
-      function monthList(fromDate, toDate) {
-        const out = [];
-        const a = new Date(Date.UTC(fromDate.getUTCFullYear(), fromDate.getUTCMonth(), 1));
-        const b = new Date(Date.UTC(toDate.getUTCFullYear(), toDate.getUTCMonth(), 1));
-        while (a <= b) { out.push({ y: a.getUTCFullYear(), m: a.getUTCMonth() + 1 }); a.setUTCMonth(a.getUTCMonth() + 1); }
-        return out;
+  // local cache (names + ESI killmails)
+  const Cache = {
+    get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+    delPrefix(prefix) { for (const k of Object.keys(localStorage)) if (k.startsWith(prefix)) localStorage.removeItem(k); }
+  };
+
+  // zKB fetch (no cache; add timestamp)
+  const ZKB = { base: 'https://zkillboard.com/api' };
+  async function getZKB(path) {
+    const url = `${ZKB.base}${path}?_=${Date.now()}`;
+    let data = [];
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (res.ok) {
+        const body = await res.json();
+        if (Array.isArray(body)) data = body;
       }
+    } catch {}
+    pagesEl.textContent = String(Number(pagesEl.textContent) + 1);
+    rowsEl.textContent = String(Number(rowsEl.textContent) + (Array.isArray(data) ? data.length : 0));
+    return data;
+  }
 
-      // ------- caching -------
-      const Cache = {
-        get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } },
-        set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
-        delPrefix(prefix) { for (const k of Object.keys(localStorage)) if (k.startsWith(prefix)) localStorage.removeItem(k); }
-      };
+  // ESI killmail fallback (fills attackers if zKB row lacks them)
+  async function getESIKillmail(id, hash) {
+    const key = `esi:km:${id}`;
+    const hit = Cache.get(key);
+    if (hit && hit.attackers) return hit;
+    if (Number(esiEl.textContent) >= Number(CFG.esiCap)) return null; // cap
+    try {
+      const r = await fetch(`https://esi.evetech.net/latest/killmails/${id}/${hash}/?datasource=tranquility`, { cache: 'no-store' });
+      if (!r.ok) return null;
+      const km = await r.json();
+      Cache.set(key, { attackers: km.attackers || [] });
+      esiEl.textContent = String(Number(esiEl.textContent) + 1);
+      await sleep(Number(CFG.esiRateMs) || 0);
+      return { attackers: km.attackers || [] };
+    } catch { return null; }
+  }
 
-      // ------- zKillboard fetch w/ UA + cache -------
-      const ZKB = { base: 'https://zkillboard.com/api' };
-      async function getZKB(url) {
-        const key = 'zkb:' + url;
-        const cached = Cache.get(key);
-        if (cached) return cached;
+  // names (batched)
+  async function resolveNames(idSet) {
+    const ids = [...idSet].map(Number).filter(Boolean);
+    const out = new Map();
+    const miss = [];
+    for (const id of ids) {
+      const v = Cache.get('name:' + id);
+      if (v && v.name) out.set(id, v.name);
+      else miss.push(id);
+    }
+    for (let i = 0; i < miss.length; i += 900) {
+      const slice = miss.slice(i, i + 900);
+      try {
+        const res = await fetch('https://esi.evetech.net/latest/universe/names/?datasource=tranquility', {
+          method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(slice)
+        });
+        const arr = await res.json();
+        namesEl.textContent = String(Number(namesEl.textContent) + 1);
+        for (const r of arr) { Cache.set('name:' + r.id, { name: r.name }); out.set(r.id, r.name); }
+      } catch {}
+      await sleep(100);
+    }
+    return out;
+  }
 
-        let data = [];
-        try {
-          const res = await fetch(url, {
-            cache: 'no-store',
-            headers: { 'X-User-Agent': 'LD-DISP/1.0 (GitHub Pages client)' }
-          });
-          if (!res.ok) throw new Error('HTTP ' + res.status);
-          const body = await res.json();
-          if (Array.isArray(body)) data = body;
-          // if body is {error:...} we keep data=[]
-        } catch (e) {
-          console.warn('zkb error', e, 'url:', url);
-          data = []; // keep going
-        }
-        Cache.set(key, data);
-        pagesEl.textContent = String(Number(pagesEl.textContent) + 1);
-        rowsEl.textContent = String(Number(rowsEl.textContent) + (Array.isArray(data) ? data.length : 0));
-        return data;
-      }
+  const countTo = (map, id, by=1) => map.set(id, (map.get(id) || 0) + by);
 
-      // ------- names (batched) -------
-      async function resolveNames(idSet) {
-        const ids = [...idSet].map(Number).filter(Boolean);
-        const out = new Map();
-        const miss = [];
-        for (const id of ids) {
-          const v = Cache.get('name:' + id);
-          if (v && v.name) out.set(id, v.name);
-          else miss.push(id);
-        }
-        for (let i = 0; i < miss.length; i += 900) {
-          const slice = miss.slice(i, i + 900);
-          try {
-            const res = await fetch('https://esi.evetech.net/latest/universe/names/?datasource=tranquility', {
-              method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(slice)
-            });
-            const arr = await res.json();
-            namesEl.textContent = String(Number(namesEl.textContent) + 1);
-            for (const r of arr) { Cache.set('name:' + r.id, { name: r.name }); out.set(r.id, r.name); }
-          } catch (e) { console.warn('name lookup fail', e); }
-          await sleep(100);
-        }
-        return out;
-      }
+  // identify TEST pilot on a mail
+  function extractTesters(rowOrESI) {
+    const attackers = rowOrESI?.attackers || [];
+    return attackers.filter(a => a.character_id && !a.is_npc && a.alliance_id === CFG.allianceID)
+                   .map(a => a.character_id);
+  }
 
-      // ------- helpers for stats -------
-      const countTo = (map, id, by=1) => map.set(id, (map.get(id) || 0) + by);
+  function isSoloByTest(rowOrESI) {
+    const attackers = rowOrESI?.attackers || [];
+    const nonNpc = attackers.filter(a => a.character_id && !a.is_npc);
+    return nonNpc.length === 1 && nonNpc[0].alliance_id === CFG.allianceID ? nonNpc[0].character_id : null;
+  }
 
-      let ABORT = false;
+  let ABORT = false;
 
-      async function buildFromStart() {
-        ABORT = false;
-        statusEl.textContent = 'starting…';
-        iskKilledEl.textContent = '–'; shipsKilledEl.textContent = '–';
-        goalPctEl.textContent = '0%'; goalBarEl.style.width = '0%';
-        soloTBody.innerHTML = ''; iskTBody.innerHTML = '';
-        pagesEl.textContent = '0'; namesEl.textContent = '0'; rowsEl.textContent = '0';
+  async function buildFromStart() {
+    ABORT = false;
+    statusEl.textContent = 'starting…';
+    iskKilledEl.textContent = '–'; shipsKilledEl.textContent = '–';
+    goalPctEl.textContent = '0%'; goalBarEl.style.width = '0%';
+    soloTBody.innerHTML = ''; iskTBody.innerHTML = '';
+    pagesEl.textContent = '0'; namesEl.textContent = '0'; rowsEl.textContent = '0'; esiEl.textContent = '0';
 
-        const now = new Date();
-        const months = monthList(startDate || now, now);
+    const now = new Date();
+    const months = monthList(startDate || now, now);
 
-        let totalISK = 0, totalShips = 0;
-        const iskByPilot = new Map();
-        const soloByPilot = new Map();
-        const nameIds = new Set();
+    let totalISK = 0, totalShips = 0;
+    const iskByPilot = new Map();
+    const soloByPilot = new Map();
+    const nameIds = new Set();
 
-        // Iterate months
-        for (const { y, m } of months) {
-          if (ABORT) break;
+    for (const { y, m } of months) {
+      if (ABORT) break;
 
-          // ---- KILLS totals by month/pages ----
-          let page = 1;
-          for (;;) {
-            if (ABORT) break;
-            if (CFG.pageCap && page > CFG.pageCap) break;
+      // --- KILLS pages ---
+      for (let page = 1; !ABORT; page++) {
+        if (CFG.pageCap && page > CFG.pageCap) break;
 
-            const killsURL = `${ZKB.base}/kills/allianceID/${CFG.allianceID}/regionID/${CFG.regionID}/year/${Number(y)}/month/${Number(m)}/page/${page}/`;
-            statusEl.textContent = `kills ${y}-${m} page ${page}…`;
-            const rows = await getZKB(killsURL);
-            if (!rows.length) break;
+        const killsPath = `/kills/allianceID/${CFG.allianceID}/regionID/${CFG.regionID}/year/${Number(y)}/month/${Number(m)}/page/${page}/`;
+        statusEl.textContent = `kills ${y}-${m} p${page}…`;
+        const rows = await getZKB(killsPath);
+        if (!rows.length) break;
 
-            for (const row of rows) {
-              const t = parseKillTime(row.killmail_time);
-              if (startDate && t && t < startDate) continue; // ignore before start
+        for (const row of rows) {
+          const t = parseKillTime(row.killmail_time);
+          if (startDate && t && t < startDate) continue;
 
-              // Sum ISK/ships regardless of attackers array (because /kills/ => TEST killed)
-              const value = row?.zkb?.totalValue || 0;
-              totalISK += value; totalShips += 1;
+          const value = row?.zkb?.totalValue || 0;
+          totalISK += value; totalShips += 1;
 
-              // Per-pilot ISK (only if attackers present to attribute)
-              if (Array.isArray(row.attackers)) {
-                for (const atk of row.attackers) {
-                  if (atk.character_id && !atk.is_npc && atk.alliance_id === CFG.allianceID) {
-                    countTo(iskByPilot, atk.character_id, value);
-                    nameIds.add(atk.character_id);
-                  }
-                }
-              }
-            }
-
-            // render progressive
-            iskKilledEl.textContent = fmtISK(totalISK);
-            shipsKilledEl.textContent = fmtNum(totalShips);
-            const pct = Math.max(0, Math.min(100, (totalISK / CFG.goalISK) * 100));
-            goalPctEl.textContent = pct.toFixed(1) + '%';
-            goalBarEl.style.width = pct + '%';
-
-            page += 1;
-            await sleep(Number(CFG.rateMs) || 0);
+          // prefer zKB attackers if present, else ESI fallback
+          let src = row;
+          if (!Array.isArray(row.attackers) || row.attackers.length === 0) {
+            const km = await getESIKillmail(row.killmail_id, row?.zkb?.hash);
+            if (km) src = km;
           }
 
-          // ---- SOLO pages per month ----
-          page = 1;
-          for (;;) {
-            if (ABORT) break;
-            if (CFG.pageCap && page > CFG.pageCap) break;
-
-            const soloURL = `${ZKB.base}/kills/solo/allianceID/${CFG.allianceID}/regionID/${CFG.regionID}/year/${Number(y)}/month/${Number(m)}/page/${page}/`;
-            statusEl.textContent = `solo ${y}-${m} page ${page}…`;
-            const rows = await getZKB(soloURL);
-            if (!rows.length) break;
-
-            for (const row of rows) {
-              const t = parseKillTime(row.killmail_time);
-              if (startDate && t && t < startDate) continue;
-
-              // Need attackers to identify the TEST pilot for solo kill
-              if (Array.isArray(row.attackers)) {
-                const nonNpc = row.attackers.filter(a => a.character_id && !a.is_npc);
-                if (nonNpc.length === 1 && nonNpc[0].alliance_id === CFG.allianceID) {
-                  const id = nonNpc[0].character_id;
-                  countTo(soloByPilot, id, 1);
-                  nameIds.add(id);
-                }
-              }
-            }
-
-            page += 1;
-            await sleep(Number(CFG.rateMs) || 0);
+          const testers = extractTesters(src);
+          if (testers.length) {
+            for (const id of testers) { countTo(iskByPilot, id, value); nameIds.add(id); }
           }
         }
 
-        statusEl.textContent = 'resolving names…';
-        const idToName = await resolveNames(nameIds);
+        // progressive totals
+        iskKilledEl.textContent = fmtISK(totalISK);
+        shipsKilledEl.textContent = fmtNum(totalShips);
+        const pct = Math.max(0, Math.min(100, (totalISK / CFG.goalISK) * 100));
+        goalPctEl.textContent = pct.toFixed(1) + '%';
+        goalBarEl.style.width = pct + '%';
 
-        function render(tbody, entries, fmt) {
-          const rows = entries.slice(0,10).map(([id, val], i) =>
-            `<tr><td>${i+1}</td><td>${idToName.get(Number(id)) || id}</td><td class="right">${fmt(val)}</td></tr>`
-          ).join('');
-          tbody.innerHTML = rows || '<tr><td colspan="3" class="muted">no data</td></tr>';
-        }
-        render(iskTBody,  [...iskByPilot.entries()].sort((a,b)=>b[1]-a[1]), v => fmtISK(v));
-        render(soloTBody, [...soloByPilot.entries()].sort((a,b)=>b[1]-a[1]), v => fmtNum(v));
-
-        statusEl.textContent = ABORT ? 'aborted' : 'done';
+        await sleep(Number(CFG.rateMs) || 0);
       }
 
-      // Buttons
-      document.getElementById('build').addEventListener('click', () => {
-        buildFromStart().catch(e => { statusEl.textContent = 'error'; console.error(e); });
-      });
-      document.getElementById('stop').addEventListener('click', () => { ABORT = true; statusEl.textContent = 'stopping…'; });
-      document.getElementById('clear').addEventListener('click', () => {
-        Cache.delPrefix('zkb:'); Cache.delPrefix('name:');
-        pagesEl.textContent = '0'; namesEl.textContent = '0'; rowsEl.textContent = '0';
-        statusEl.textContent = 'cache cleared';
-      });
-    </script>
-  </body>
+      // --- SOLO pages (or compute via ESI if needed) ---
+      for (let page = 1; !ABORT; page++) {
+        if (CFG.pageCap && page > CFG.pageCap) break;
+
+        const soloPath = `/kills/solo/allianceID/${CFG.allianceID}/regionID/${CFG.regionID}/year/${Number(y)}/month/${Number(m)}/page/${page}/`;
+        statusEl.textContent = `solo ${y}-${m} p${page}…`;
+        const rows = await getZKB(soloPath);
+        if (!rows.length) break;
+
+        for (const row of rows) {
+          const t = parseKillTime(row.killmail_time);
+          if (startDate && t && t < startDate) continue;
+
+          let src = row;
+          if (!Array.isArray(row.attackers) || row.attackers.length === 0) {
+            const km = await getESIKillmail(row.killmail_id, row?.zkb?.hash);
+            if (km) src = km;
+          }
+          const soloId = isSoloByTest(src);
+          if (soloId) { countTo(soloByPilot, soloId, 1); nameIds.add(soloId); }
+        }
+
+        await sleep(Number(CFG.rateMs) || 0);
+      }
+    }
+
+    statusEl.textContent = 'resolving names…';
+    const idToName = await resolveNames(nameIds);
+
+    const render = (tbody, entries, fmt) => {
+      const rows = entries.slice(0,10).map(([id, val], i) =>
+        `<tr><td>${i+1}</td><td>${idToName.get(Number(id)) || id}</td><td class="right">${fmt(val)}</td></tr>`
+      ).join('');
+      tbody.innerHTML = rows || '<tr><td colspan="3" class="muted">no data</td></tr>';
+    };
+    render(iskTBody,  [...iskByPilot.entries()].sort((a,b)=>b[1]-a[1]), v => fmtISK(v));
+    render(soloTBody, [...soloByPilot.entries()].sort((a,b)=>b[1]-a[1]), v => fmtNum(v));
+
+    statusEl.textContent = ABORT ? 'aborted' : 'done';
+  }
+
+  document.getElementById('build').addEventListener('click', () => {
+    buildFromStart().catch(e => { statusEl.textContent = 'error'; console.error(e); });
+  });
+  document.getElementById('stop').addEventListener('click', () => { ABORT = true; statusEl.textContent = 'stopping…'; });
+  document.getElementById('clear').addEventListener('click', () => {
+    Cache.delPrefix('esi:km:'); Cache.delPrefix('name:');
+    pagesEl.textContent = '0'; namesEl.textContent = '0'; rowsEl.textContent = '0'; esiEl.textContent = '0';
+    statusEl.textContent = 'cache cleared';
+  });
+</script>
+</body>
 </html>
-

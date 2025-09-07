@@ -7,6 +7,9 @@
 
   "from": "2025-09-01",
 
-  "rateMs": 600,
-  "pageCap": 10
+  "rateMs": 400,       
+  "pageCap": 50,       
+
+  "esiRateMs": 200,    
+  "esiCap": 500        
 }
