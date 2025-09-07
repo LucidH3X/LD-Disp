@@ -2,5 +2,9 @@
   "title": "TEST Alliance – Deployment Tracker",
   "allianceID": 498125261,
   "goalISK": 500000000000,
-  "since": "2025-09-01"
+  "since": "2025-09-01",
+  "regionID": 10000035,
+  "regionName": "Deklein",
+  "year": 2025,
+  "month": 9
 }

@@ -1,24 +1,208 @@
-<!-- /index.html -->
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>LD-DISP — it works</title>
+    <title>LD-DISP — Region+Month Preview</title>
     <meta name="color-scheme" content="dark light" />
-    <style>body{font-family:system-ui;margin:2rem;max-width:900px}.muted{opacity:.7}</style>
+    <style>
+      :root { --w: 1100px; --pad: 1rem; }
+      * { box-sizing: border-box; }
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif; margin: 0; }
+      header { position: sticky; top: 0; background: canvas; border-bottom: 1px solid color-mix(in oklab, CanvasText 20%, transparent); padding: .75rem var(--pad); z-index: 10; }
+      .wrap { max-width: var(--w); margin: 0 auto; padding: 0 var(--pad); }
+      .row { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+      main { padding: 1rem 0 3rem; }
+      .muted { opacity: .7; font-size: .92rem; }
+      .card { border: 1px solid color-mix(in oklab, CanvasText 20%, transparent); border-radius: 1rem; padding: 1rem; background: canvas; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+      table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+      th, td { padding: .5rem .4rem; border-bottom: 1px solid color-mix(in oklab, CanvasText 15%, transparent); text-align: left; }
+      .right { text-align: right; }
+      button { font: inherit; padding: .5rem .8rem; border-radius: .6rem; border: 1px solid color-mix(in oklab, CanvasText 25%, transparent); background: canvas; color: CanvasText; }
+      .bar { height: 10px; border-radius: 999px; border: 1px solid color-mix(in oklab, CanvasText 20%, transparent); }
+      .bar > div { height: 100%; border-radius: 999px; background: CanvasText; opacity: .2; }
+    </style>
   </head>
   <body>
-    <h1>LD-DISP — it works 🎯</h1>
-    <p class="muted">Live Server is reading files from this folder.</p>
-    <h2>site.json</h2>
-    <pre id="cfg">(loading…)</pre>
+    <header>
+      <div class="wrap row">
+        <h1 id="title">LD-DISP — Region+Month Preview</h1>
+        <span id="status" class="muted">idle</span>
+      </div>
+      <div class="wrap row" style="margin-top:.5rem">
+        <button id="build">Build (first page, filtered)</button>
+        <span class="muted">Alliance: <code id="aid">?</code></span>
+        <span class="muted">Region: <code id="rid">?</code> <span id="rname" class="muted"></span></span>
+        <span class="muted">Window: <code id="win">YYYY-M</code></span>
+      </div>
+    </header>
 
-    <script>
-      fetch('./site.json')
-        .then(r => r.ok ? r.text() : '(missing)')
-        .then(txt => { document.getElementById('cfg').textContent = txt || '(empty)'; })
-        .catch(err => { document.getElementById('cfg').textContent = String(err); });
+    <main class="wrap">
+      <section class="grid" style="margin-bottom:1rem">
+        <div class="card">
+          <strong>Overview (first page in window)</strong>
+          <div style="height:.5rem"></div>
+          <div class="row" style="justify-content: space-between;">
+            <div class="muted">ISK killed</div>
+            <div id="iskKilled">–</div>
+          </div>
+          <div class="row" style="justify-content: space-between;">
+            <div class="muted">Ships killed</div>
+            <div id="shipsKilled">–</div>
+          </div>
+          <div style="height:.5rem"></div>
+          <div class="bar"><div id="goalBar" style="width:0%"></div></div>
+          <div class="row" style="justify-content: space-between; margin-top:.4rem">
+            <div class="muted">Goal</div>
+            <div><span id="goalPct">0%</span> (<span id="iskGoal">–</span>)</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid">
+        <div class="card">
+          <strong>Top 10 — Solo kills (first page, window)</strong>
+          <div style="max-height:420px;overflow:auto;margin-top:.4rem">
+            <table id="soloTable">
+              <thead><tr><th>#</th><th>Pilot</th><th class="right">Solo</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <strong>Top 10 — ISK destroyed (first page, window)</strong>
+          <div style="max-height:420px;overflow:auto;margin-top:.4rem">
+            <table id="iskTable">
+              <thead><tr><th>#</th><th>Pilot</th><th class="right">ISK</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module">
+      // helpers
+      const $  = (s) => document.querySelector(s);
+      const fmtISK = (n) => new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(Math.round(n)) + ' ISK';
+      const fmtNum = (n) => new Intl.NumberFormat().format(n);
+
+      // DOM refs
+      const statusEl = $('#status');
+      const iskKilledEl = $('#iskKilled');
+      const shipsKilledEl = $('#shipsKilled');
+      const iskGoalEl = $('#iskGoal');
+      const goalPctEl = $('#goalPct');
+      const goalBarEl = $('#goalBar');
+      const soloTBody = document.querySelector('#soloTable tbody');
+      const iskTBody  = document.querySelector('#iskTable tbody');
+      const aidEl = $('#aid'), ridEl = $('#rid'), rnameEl = $('#rname'), winEl = $('#win');
+
+      // defaults; site.json can override
+      let CFG = {
+        title: 'LD-DISP — Region+Month Preview',
+        allianceID: 498125261,
+        goalISK: 500_000_000_000,
+        regionID: 10000035,
+        regionName: 'Deklein',
+        year: 2025,
+        month: 9
+      };
+
+      try {
+        const cfg = await (await fetch('./site.json', { cache: 'no-store' })).json();
+        CFG = { ...CFG, ...(cfg || {}) };
+      } catch {}
+
+      document.title = CFG.title || document.title;
+      $('#title').textContent = CFG.title || $('#title').textContent;
+      aidEl.textContent = String(CFG.allianceID);
+      ridEl.textContent = String(CFG.regionID);
+      rnameEl.textContent = CFG.regionName ? `(${CFG.regionName})` : '';
+      winEl.textContent = `${Number(CFG.year)}-${Number(CFG.month)}`;
+      iskGoalEl.textContent = fmtISK(CFG.goalISK);
+
+      async function resolveNames(idSet) {
+        const ids = [...idSet];
+        if (!ids.length) return new Map();
+        const res = await fetch('https://esi.evetech.net/latest/universe/names/?datasource=tranquility', {
+          method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(ids)
+        });
+        const arr = await res.json();
+        const map = new Map();
+        for (const r of arr) map.set(r.id, r.name);
+        return map;
+      }
+
+      async function buildFirstPageWindow() {
+        statusEl.textContent = 'fetching…';
+        iskKilledEl.textContent = '–'; shipsKilledEl.textContent = '–';
+        goalPctEl.textContent = '0%'; goalBarEl.style.width = '0%';
+        soloTBody.innerHTML = ''; iskTBody.innerHTML = '';
+
+        const ZKB = { base: 'https://zkillboard.com/api' };
+        const ym = `year/${Number(CFG.year)}/month/${Number(CFG.month)}`;
+        const allURL  = `${ZKB.base}/kills/allianceID/${CFG.allianceID}/regionID/${CFG.regionID}/${ym}/page/1/`;
+        const soloURL = `${ZKB.base}/kills/solo/allianceID/${CFG.allianceID}/regionID/${CFG.regionID}/${ym}/page/1/`;
+
+        const [all, solo] = await Promise.all([
+          fetch(allURL,  { cache: 'no-store' }).then(r => r.json()),
+          fetch(soloURL, { cache: 'no-store' }).then(r => r.json())
+        ]);
+
+        let totalISK = 0, totalShips = 0;
+        const iskByPilot = new Map();
+        const nameIds = new Set();
+
+        for (const row of (Array.isArray(all) ? all : [])) {
+          const value = row?.zkb?.totalValue || 0;
+          totalISK  += value; totalShips += 1;
+          for (const atk of (row.attackers || [])) {
+            if (atk.alliance_id === CFG.allianceID && atk.character_id) {
+              iskByPilot.set(atk.character_id, (iskByPilot.get(atk.character_id) || 0) + value);
+              nameIds.add(atk.character_id);
+            }
+          }
+        }
+
+        const soloByPilot = new Map();
+        for (const row of (Array.isArray(solo) ? solo : [])) {
+          if (row?.zkb?.solo) {
+            const attackers = (row.attackers || []).filter(a => a.character_id && !a.is_npc);
+            if (attackers.length === 1 && attackers[0].alliance_id === CFG.allianceID) {
+              const id = attackers[0].character_id;
+              soloByPilot.set(id, (soloByPilot.get(id) || 0) + 1);
+              nameIds.add(id);
+            }
+          }
+        }
+
+        statusEl.textContent = 'resolving names…';
+        const idToName = await resolveNames(nameIds);
+
+        iskKilledEl.textContent = fmtISK(totalISK);
+        shipsKilledEl.textContent = fmtNum(totalShips);
+        const pct = Math.max(0, Math.min(100, (totalISK / CFG.goalISK) * 100));
+        goalPctEl.textContent = pct.toFixed(1) + '%';
+        goalBarEl.style.width = pct + '%';
+
+        function render(tbody, entries, fmt) {
+          const rows = entries.slice(0,10).map(([id, val], i) =>
+            `<tr><td>${i+1}</td><td>${idToName.get(id) || id}</td><td class="right">${fmt(val)}</td></tr>`
+          ).join('');
+          tbody.innerHTML = rows || '<tr><td colspan="3" class="muted">no data</td></tr>';
+        }
+        render(iskTBody,  [...iskByPilot.entries()].sort((a,b)=>b[1]-a[1]), v => fmtISK(v));
+        render(soloTBody, [...soloByPilot.entries()].sort((a,b)=>b[1]-a[1]), v => fmtNum(v));
+
+        statusEl.textContent = 'done (first page, window)';
+      }
+
+      document.getElementById('build').addEventListener('click', () => {
+        buildFirstPageWindow().catch(e => { statusEl.textContent = 'error'; console.error(e); });
+      });
     </script>
   </body>
 </html>
