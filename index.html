@@ -34,6 +34,7 @@
   <div class="wrap row" style="margin-top:.5rem">
     <button id="build">Build (from start → now)</button>
     <button id="stop">Stop</button>
+    <button id="load">Load snapshot</button>
     <button id="clear">Clear cache</button>
     <span class="muted">Alliance: <code id="aid">?</code></span>
     <span class="muted">Region: <code id="rid">?</code> <span id="rname" class="muted"></span></span>
@@ -222,7 +223,6 @@
     return attackers.filter(a => a.character_id && !a.is_npc && a.alliance_id === CFG.allianceID)
                    .map(a => a.character_id);
   }
-
   function isSoloByTest(rowOrESI) {
     const attackers = rowOrESI?.attackers || [];
     const nonNpc = attackers.filter(a => a.character_id && !a.is_npc);
@@ -289,7 +289,7 @@
         await sleep(Number(CFG.rateMs) || 0);
       }
 
-      // --- SOLO pages (or compute via ESI if needed) ---
+      // --- SOLO pages ---
       for (let page = 1; !ABORT; page++) {
         if (CFG.pageCap && page > CFG.pageCap) break;
 
@@ -330,6 +330,42 @@
     statusEl.textContent = ABORT ? 'aborted' : 'done';
   }
 
+  // --- snapshot loader ---
+  async function loadSnapshot() {
+    try {
+      statusEl.textContent = 'loading snapshot…';
+      const r = await fetch('data/summary.json?_=' + Date.now(), { cache: 'no-store' });
+      const j = await r.json();
+
+      // overview
+      iskKilledEl.textContent = fmtISK(j.totals.isk);
+      shipsKilledEl.textContent = fmtNum(j.totals.ships);
+      const pct = Number(j.totals.goalPct) || 0;
+      goalPctEl.textContent = pct.toFixed(1) + '%';
+      goalBarEl.style.width = pct + '%';
+
+      // names map
+      const idToName = new Map(Object.entries(j.names || {}).map(([k,v]) => [Number(k), v]));
+
+      // small renderer for snapshot lists
+      const renderSnap = (tbody, list, fmtVal, key) => {
+        const rows = (list || []).slice(0,10).map((row, i) =>
+          `<tr><td>${i+1}</td><td>${idToName.get(row.id) || row.id}</td><td class="right">${fmtVal(row[key])}</td></tr>`
+        ).join('');
+        tbody.innerHTML = rows || '<tr><td colspan="3" class="muted">no data</td></tr>';
+      };
+
+      renderSnap(soloTBody, j.topSolo, v => fmtNum(v), 'count');
+      renderSnap(iskTBody,  j.topISK,  v => fmtISK(v), 'isk');
+
+      statusEl.textContent = `done (snapshot @ ${j.generatedAt})`;
+    } catch (e) {
+      statusEl.textContent = 'snapshot error';
+      console.error(e);
+    }
+  }
+
+  // buttons
   document.getElementById('build').addEventListener('click', () => {
     buildFromStart().catch(e => { statusEl.textContent = 'error'; console.error(e); });
   });
@@ -338,6 +374,9 @@
     Cache.delPrefix('esi:km:'); Cache.delPrefix('name:');
     pagesEl.textContent = '0'; namesEl.textContent = '0'; rowsEl.textContent = '0'; esiEl.textContent = '0';
     statusEl.textContent = 'cache cleared';
+  });
+  document.getElementById('load').addEventListener('click', () => {
+    loadSnapshot().catch(e => { statusEl.textContent = 'snapshot error'; console.error(e); });
   });
 </script>
 </body>
