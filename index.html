@@ -6,26 +6,123 @@
 <title>TEST Alliance – Deployment Tracker</title>
 <meta name="color-scheme" content="dark light" />
 <style>
-  :root { --w: 1100px; --pad: 1rem; }
+  :root {
+    --w: 1100px; --pad: 1rem;
+    --bg0: #070814; --bg1: #0b1024; --glass: rgba(255,255,255,0.06);
+    --border: rgba(255,255,255,0.15); --border2: rgba(255,255,255,0.08);
+    --text: #e8ecff; --muted: #b6c0ff; --accent: #7aa2ff; --accent2: #c07dff;
+    --shadow: 0 10px 30px rgba(0,0,0,0.35);
+  }
   * { box-sizing: border-box; }
-  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif; margin: 0; }
-  header { position: sticky; top: 0; background: canvas; border-bottom: 1px solid color-mix(in oklab, CanvasText 20%, transparent); padding: .75rem var(--pad); z-index: 10; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; color: var(--text); background: radial-gradient(1200px 800px at 10% 10%, #0e1330 0%, var(--bg0) 45%) fixed;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  /* Starfield canvas behind everything */
+  #starfield {
+    position: fixed; inset: 0; z-index: -2; background: linear-gradient(180deg, var(--bg1), var(--bg0));
+  }
+  /* Nebula overlay for vibes */
+  .nebula {
+    position: fixed; inset: -10%; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(600px 400px at 80% 20%, rgba(122,162,255,.18), transparent 60%),
+      radial-gradient(700px 480px at 25% 75%, rgba(192,125,255,.14), transparent 65%),
+      radial-gradient(900px 600px at 60% 60%, rgba(80,200,255,.10), transparent 70%);
+    filter: blur(12px) saturate(120%);
+    animation: float 22s ease-in-out infinite alternate;
+  }
+  @keyframes float { from { transform: translateY(-1.5%);} to { transform: translateY(1.5%);} }
+
+  header {
+    position: sticky; top: 0; z-index: 10;
+    background: linear-gradient(180deg, rgba(8,10,24,.75), rgba(8,10,24,.35));
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border2);
+    padding: .75rem var(--pad);
+  }
   .wrap { max-width: var(--w); margin: 0 auto; padding: 0 var(--pad); }
   .row { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
   main { padding: 1rem 0 3rem; }
-  .muted { opacity: .7; font-size: .92rem; }
-  .card { border: 1px solid color-mix(in oklab, CanvasText 20%, transparent); border-radius: 1rem; padding: 1rem; background: canvas; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+
+  h1 { font-size: clamp(1.2rem, 1.2rem + 1vw, 1.6rem); letter-spacing: .2px; margin: 0; }
+  .muted { color: var(--muted); font-size: .92rem; }
+
+  .card {
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 1rem;
+    background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow);
+  }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+
   table { width: 100%; border-collapse: collapse; font-size: .95rem; }
-  th, td { padding: .5rem .4rem; border-bottom: 1px solid color-mix(in oklab, CanvasText 15%, transparent); text-align: left; }
+  th, td { padding: .6rem .5rem; border-bottom: 1px solid var(--border2); text-align: left; }
+  thead th { font-weight: 600; color: var(--muted); }
+  tbody tr:hover { background: rgba(255,255,255,.03); }
+
   .right { text-align: right; }
-  button { font: inherit; padding: .5rem .8rem; border-radius: .6rem; border: 1px solid color-mix(in oklab, CanvasText 25%, transparent); background: canvas; color: CanvasText; }
-  .bar { height: 10px; border-radius: 999px; border: 1px solid color-mix(in oklab, CanvasText 20%, transparent); }
-  .bar > div { height: 100%; border-radius: 999px; background: CanvasText; opacity: .2; }
+
+  button {
+    font: inherit; padding: .55rem .85rem; border-radius: 12px;
+    border: 1px solid var(--border); color: var(--text);
+    background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+    backdrop-filter: blur(6px); box-shadow: 0 6px 14px rgba(0,0,0,.25);
+    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  }
+  button:hover {
+    transform: translateY(-1px);
+    border-color: rgba(122,162,255,.5);
+    box-shadow: 0 8px 18px rgba(122,162,255,.25);
+  }
+  button#build, button#load {
+    border-color: rgba(122,162,255,.5);
+    background: linear-gradient(180deg, rgba(122,162,255,.18), rgba(122,162,255,.06));
+  }
+  button#clear, button#stop {
+    border-color: rgba(192,125,255,.35);
+    background: linear-gradient(180deg, rgba(192,125,255,.14), rgba(192,125,255,.05));
+  }
+
+  .bar { height: 10px; border-radius: 999px; border: 1px solid var(--border); background: rgba(255,255,255,.06); overflow: hidden; }
+  .bar > div { height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    box-shadow: inset 0 0 10px rgba(255,255,255,.3);
+  }
+
+  /* tiny badges */
   .tiny { font-size: .82rem; }
+  code { background: rgba(255,255,255,.08); padding: .1rem .35rem; border-radius: 6px; border: 1px solid var(--border2); }
+
+  /* pilot chip + medals + icons */
+  .pilot { display: flex; align-items: center; gap: .5rem; }
+  a.pilot { color: inherit; text-decoration: none; }
+  a.pilot:hover { filter: brightness(1.1); }
+  .pilot img {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1px solid var(--border2); box-shadow: 0 2px 6px rgba(0,0,0,.35);
+    background: rgba(255,255,255,.05);
+  }
+  .icons { display:inline-flex; gap:.25rem; margin-left:.1rem; vertical-align: middle; }
+  .icons img { width: 18px; height: 18px; border-radius: 4px; border: 1px solid var(--border2); background: rgba(255,255,255,.05); }
+  .medal {
+    display: inline-grid; place-items: center;
+    width: 1.6rem; height: 1.6rem; border-radius: 50%; font-weight: 700;
+  }
+  .medal.gold   { background: radial-gradient(circle at 30% 30%, #fff7, #ffd54f); color: #2b2200; animation: bling 1.8s ease-in-out infinite; }
+  .medal.silver { background: radial-gradient(circle at 30% 30%, #fff7, #cfd8dc); color: #1c2224; }
+  .medal.bronze { background: radial-gradient(circle at 30% 30%, #fff7, #d7a56c); color: #2b1a00; }
+  @keyframes bling { 0%,100%{ box-shadow:0 0 0 rgba(255,215,64,0);} 50%{ box-shadow:0 0 16px rgba(255,215,64,.65);} }
 </style>
 </head>
 <body>
+<canvas id="starfield"></canvas>
+<div class="nebula"></div>
+
 <header>
   <div class="wrap row">
     <h1 id="title">TEST Alliance – Deployment Tracker</h1>
@@ -49,7 +146,7 @@
 <main class="wrap">
   <section class="grid" style="margin-bottom:1rem">
     <div class="card">
-      <strong>Overview</strong>
+      <strong style="font-weight:700">Overview</strong>
       <div style="height:.5rem"></div>
       <div class="row" style="justify-content: space-between;">
         <div class="muted">ISK killed</div>
@@ -92,13 +189,86 @@
 </main>
 
 <script type="module">
-  // ---------- utils ----------
+  /* ---------- starfield (GPU-friendly) ---------- */
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d', { alpha: true });
+  let W = 0, H = 0, DPR = Math.min(2, window.devicePixelRatio || 1);
+  let stars = [];
+  function resize() {
+    W = Math.floor(innerWidth); H = Math.floor(innerHeight);
+    canvas.width = Math.floor(W * DPR); canvas.height = Math.floor(H * DPR);
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  function rand(min, max) { return min + Math.random() * (max - min); }
+  function initStars() {
+    const count = Math.floor((W * H) / 5000); // density
+    stars = Array.from({ length: count }, () => ({
+      x: rand(0, W), y: rand(0, H),
+      r: rand(0.4, 1.6),
+      tw: rand(0.5, 2.2), // twinkle speed
+      a0: rand(0.2, 0.9), // base alpha
+      p: rand(0, Math.PI * 2), // phase
+      drift: rand(0.05, 0.18)  // slow vertical drift
+    }));
+  }
+  function drawStars(t) {
+    ctx.clearRect(0, 0, W, H);
+    for (const s of stars) {
+      const alpha = s.a0 * (0.6 + 0.4 * Math.sin(t * 0.001 * s.tw + s.p));
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = '#cfe3ff';
+      ctx.fill();
+      // tiny cross sparkle
+      if (s.r > 1.2 && alpha > 0.65) {
+        ctx.globalAlpha = alpha * 0.6;
+        ctx.beginPath();
+        ctx.moveTo(s.x - 2, s.y); ctx.lineTo(s.x + 2, s.y);
+        ctx.moveTo(s.x, s.y - 2); ctx.lineTo(s.x, s.y + 2);
+        ctx.strokeStyle = 'rgba(200,220,255,0.6)'; ctx.lineWidth = 0.6; ctx.stroke();
+      }
+      // drift
+      s.y += s.drift * 0.2;
+      if (s.y > H + 2) { s.y = -2; s.x = rand(0, W); }
+    }
+    ctx.globalAlpha = 1;
+  }
+  function loop(t) { drawStars(t || performance.now()); requestAnimationFrame(loop); }
+  addEventListener('resize', () => { resize(); initStars(); });
+  resize(); initStars(); requestAnimationFrame(loop);
+
+  /* ---------- app logic ---------- */
   const $  = (s) => document.querySelector(s);
   const fmtISK = (n) => new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(Math.round(n)) + ' ISK';
   const fmtNum = (n) => new Intl.NumberFormat().format(n);
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-  // DOM
+  // avatars + medals + zKill links
+  const zkbChar = (id) => `https://zkillboard.com/character/${Number(id)}/`;
+  const avatarUrl = (id, size = 64) => `https://images.evetech.net/characters/${Number(id)}/portrait?size=${size}`;
+  const corpLogo  = (id, size = 64) => id ? `https://images.evetech.net/corporations/${Number(id)}/logo?size=${size}` : '';
+  const alliLogo  = (id, size = 64) => id ? `https://images.evetech.net/alliances/${Number(id)}/logo?size=${size}` : '';
+  const rankHtml = (i) => i === 0 ? '<span class="medal gold">🥇</span>'
+    : i === 1 ? '<span class="medal silver">🥈</span>'
+    : i === 2 ? '<span class="medal bronze">🥉</span>'
+    : String(i + 1);
+
+  // pilot cell builder uses meta (corp/alliance) when available
+  function pilotCellHtml(id, name, meta) {
+    const corp = meta?.corp || null;
+    const alli = meta?.alliance || null;
+    const corpImg = corp ? `<img src="${corpLogo(corp,32)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '';
+    const alliImg = alli ? `<img src="${alliLogo(alli,32)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '';
+    return `<a class="pilot" href="${zkbChar(id)}" target="_blank" rel="noopener noreferrer">
+      <img src="${avatarUrl(id,64)}" alt="" loading="lazy" referrerpolicy="no-referrer">
+      <span>${name || id}</span>
+      <span class="icons">${alliImg}${corpImg}</span>
+    </a>`;
+  }
+
+  // DOM refs
   const statusEl = $('#status');
   const iskKilledEl = $('#iskKilled');
   const shipsKilledEl = $('#shipsKilled');
@@ -149,7 +319,7 @@
     return out;
   }
 
-  // local cache (names + ESI killmails)
+  // local cache (names + ESI killmails + char meta)
   const Cache = {
     get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
@@ -173,7 +343,7 @@
     return data;
   }
 
-  // ESI killmail fallback (fills attackers if zKB row lacks them)
+  // ESI killmail fallback
   async function getESIKillmail(id, hash) {
     const key = `esi:km:${id}`;
     const hit = Cache.get(key);
@@ -183,10 +353,27 @@
       const r = await fetch(`https://esi.evetech.net/latest/killmails/${id}/${hash}/?datasource=tranquility`, { cache: 'no-store' });
       if (!r.ok) return null;
       const km = await r.json();
-      Cache.set(key, { attackers: km.attackers || [] });
+      const keep = { attackers: km.attackers || [] };
+      Cache.set(key, keep);
       esiEl.textContent = String(Number(esiEl.textContent) + 1);
       await sleep(Number(CFG.esiRateMs) || 0);
-      return { attackers: km.attackers || [] };
+      return keep;
+    } catch { return null; }
+  }
+
+  // Character meta (corp/alliance) via ESI /characters/{id}
+  async function getCharMeta(id) {
+    const key = `meta:char:${id}`;
+    const hit = Cache.get(key);
+    if (hit && (hit.corporation_id || hit.alliance_id)) return hit;
+    try {
+      const r = await fetch(`https://esi.evetech.net/latest/characters/${Number(id)}/?datasource=tranquility`, { cache: 'no-store' });
+      if (!r.ok) return null;
+      const j = await r.json();
+      const meta = { corporation_id: j.corporation_id || null, alliance_id: j.alliance_id || null };
+      Cache.set(key, meta);
+      await sleep(120);
+      return meta;
     } catch { return null; }
   }
 
@@ -217,16 +404,32 @@
 
   const countTo = (map, id, by=1) => map.set(id, (map.get(id) || 0) + by);
 
-  // identify TEST pilot on a mail
-  function extractTesters(rowOrESI) {
+  // identify TEST pilot on a mail + collect meta
+  function extractTesters(rowOrESI, collectMeta = true) {
     const attackers = rowOrESI?.attackers || [];
-    return attackers.filter(a => a.character_id && !a.is_npc && a.alliance_id === CFG.allianceID)
-                   .map(a => a.character_id);
+    const testers = attackers.filter(a => a.character_id && !a.is_npc && a.alliance_id === CFG.allianceID);
+    if (collectMeta) {
+      for (const a of testers) setMetaFromAtk(a);
+    }
+    return testers.map(a => a.character_id);
   }
-  function isSoloByTest(rowOrESI) {
+  function isSoloByTest(rowOrESI, collectMeta = true) {
     const attackers = rowOrESI?.attackers || [];
     const nonNpc = attackers.filter(a => a.character_id && !a.is_npc);
-    return nonNpc.length === 1 && nonNpc[0].alliance_id === CFG.allianceID ? nonNpc[0].character_id : null;
+    const solo = (nonNpc.length === 1 && nonNpc[0].alliance_id === CFG.allianceID) ? nonNpc[0] : null;
+    if (solo && collectMeta) setMetaFromAtk(solo);
+    return solo ? solo.character_id : null;
+  }
+
+  const charMeta = new Map(); // id -> {corp, alliance}
+  function setMetaFromAtk(atk) {
+    if (!atk?.character_id) return;
+    const prev = charMeta.get(atk.character_id) || {};
+    const next = {
+      corp: atk.corporation_id ?? prev.corp ?? null,
+      alliance: atk.alliance_id ?? prev.alliance ?? null,
+    };
+    charMeta.set(atk.character_id, next);
   }
 
   let ABORT = false;
@@ -238,6 +441,7 @@
     goalPctEl.textContent = '0%'; goalBarEl.style.width = '0%';
     soloTBody.innerHTML = ''; iskTBody.innerHTML = '';
     pagesEl.textContent = '0'; namesEl.textContent = '0'; rowsEl.textContent = '0'; esiEl.textContent = '0';
+    charMeta.clear();
 
     const now = new Date();
     const months = monthList(startDate || now, now);
@@ -273,7 +477,7 @@
             if (km) src = km;
           }
 
-          const testers = extractTesters(src);
+          const testers = extractTesters(src, true);
           if (testers.length) {
             for (const id of testers) { countTo(iskByPilot, id, value); nameIds.add(id); }
           }
@@ -307,7 +511,7 @@
             const km = await getESIKillmail(row.killmail_id, row?.zkb?.hash);
             if (km) src = km;
           }
-          const soloId = isSoloByTest(src);
+          const soloId = isSoloByTest(src, true);
           if (soloId) { countTo(soloByPilot, soloId, 1); nameIds.add(soloId); }
         }
 
@@ -319,9 +523,15 @@
     const idToName = await resolveNames(nameIds);
 
     const render = (tbody, entries, fmt) => {
-      const rows = entries.slice(0,10).map(([id, val], i) =>
-        `<tr><td>${i+1}</td><td>${idToName.get(Number(id)) || id}</td><td class="right">${fmt(val)}</td></tr>`
-      ).join('');
+      const rows = entries.slice(0,10).map(([id, val], i) => {
+        const name = idToName.get(Number(id)) || String(id);
+        const meta = charMeta.get(Number(id));
+        return `<tr>
+          <td>${rankHtml(i)}</td>
+          <td>${pilotCellHtml(id, name, meta)}</td>
+          <td class="right">${fmt(val)}</td>
+        </tr>`;
+      }).join('');
       tbody.innerHTML = rows || '<tr><td colspan="3" class="muted">no data</td></tr>';
     };
     render(iskTBody,  [...iskByPilot.entries()].sort((a,b)=>b[1]-a[1]), v => fmtISK(v));
@@ -330,16 +540,35 @@
     statusEl.textContent = ABORT ? 'aborted' : 'done';
   }
 
-  // --- snapshot loader ---
+  // --- snapshot loader (with char meta enrich for top IDs) ---
+  async function enrichMetaForTop(ids) {
+    const tasks = [];
+    for (const id of ids) {
+      if (charMeta.has(id)) continue;
+      const cached = Cache.get(`meta:char:${id}`);
+      if (cached) {
+        charMeta.set(id, { corp: cached.corporation_id || null, alliance: cached.alliance_id || null });
+        continue;
+      }
+      tasks.push((async () => {
+        const meta = await getCharMeta(id);
+        if (meta) charMeta.set(id, { corp: meta.corporation_id || null, alliance: meta.alliance_id || null });
+      })());
+    }
+    await Promise.all(tasks);
+  }
+
   async function loadSnapshot() {
+    statusEl.textContent = 'loading snapshot…';
     try {
-      statusEl.textContent = 'loading snapshot…';
-      const r = await fetch('data/summary.json?_=' + Date.now(), { cache: 'no-store' });
-      const j = await r.json();
+      const url = new URL('data/summary.json', location.href);
+      const res = await fetch(url.toString() + '?_=' + Date.now(), { cache: 'no-store' });
+      if (!res.ok) { statusEl.textContent = `snapshot error (${res.status})`; return; }
+      const j = await res.json();
 
       // overview
-      iskKilledEl.textContent = fmtISK(j.totals.isk);
-      shipsKilledEl.textContent = fmtNum(j.totals.ships);
+      iskKilledEl.textContent = fmtISK(j.totals.isk || 0);
+      shipsKilledEl.textContent = fmtNum(j.totals.ships || 0);
       const pct = Number(j.totals.goalPct) || 0;
       goalPctEl.textContent = pct.toFixed(1) + '%';
       goalBarEl.style.width = pct + '%';
@@ -347,18 +576,27 @@
       // names map
       const idToName = new Map(Object.entries(j.names || {}).map(([k,v]) => [Number(k), v]));
 
-      // small renderer for snapshot lists
+      // enrich meta for visible pilots (top 10 of each list)
+      const topIds = new Set([...(j.topSolo||[]).slice(0,10).map(x=>x.id), ...(j.topISK||[]).slice(0,10).map(x=>x.id)]);
+      await enrichMetaForTop(topIds);
+
       const renderSnap = (tbody, list, fmtVal, key) => {
-        const rows = (list || []).slice(0,10).map((row, i) =>
-          `<tr><td>${i+1}</td><td>${idToName.get(row.id) || row.id}</td><td class="right">${fmtVal(row[key])}</td></tr>`
-        ).join('');
+        const rows = (list || []).slice(0,10).map((row, i) => {
+          const name = idToName.get(row.id) || String(row.id);
+          const meta = charMeta.get(Number(row.id));
+          return `<tr>
+            <td>${rankHtml(i)}</td>
+            <td>${pilotCellHtml(row.id, name, meta)}</td>
+            <td class="right">${fmtVal(row[key])}</td>
+          </tr>`;
+        }).join('');
         tbody.innerHTML = rows || '<tr><td colspan="3" class="muted">no data</td></tr>';
       };
 
       renderSnap(soloTBody, j.topSolo, v => fmtNum(v), 'count');
       renderSnap(iskTBody,  j.topISK,  v => fmtISK(v), 'isk');
 
-      statusEl.textContent = `done (snapshot @ ${j.generatedAt})`;
+      statusEl.textContent = `done (snapshot @ ${j.generatedAt || 'n/a'})`;
     } catch (e) {
       statusEl.textContent = 'snapshot error';
       console.error(e);
@@ -371,7 +609,7 @@
   });
   document.getElementById('stop').addEventListener('click', () => { ABORT = true; statusEl.textContent = 'stopping…'; });
   document.getElementById('clear').addEventListener('click', () => {
-    Cache.delPrefix('esi:km:'); Cache.delPrefix('name:');
+    Cache.delPrefix('esi:km:'); Cache.delPrefix('name:'); Cache.delPrefix('meta:char:');
     pagesEl.textContent = '0'; namesEl.textContent = '0'; rowsEl.textContent = '0'; esiEl.textContent = '0';
     statusEl.textContent = 'cache cleared';
   });
