@@ -1,1 +1,276 @@
-{"generatedAt":"","totals":{"isk":0,"ships":0,"goalPct":0},"topISK":[],"topSolo":[],"names":{}}
+{
+  "generatedAt": "2025-09-07T22:02:45.942Z",
+  "from": "2025-09-01",
+  "to": "now",
+  "allianceID": 498125261,
+  "regionID": 10000035,
+  "goalISK": 500000000000,
+  "totals": {
+    "isk": 10607211647,
+    "ships": 146,
+    "goalPct": 2.12
+  },
+  "topISK": [
+    {
+      "id": 2122412180,
+      "isk": 2544957022
+    },
+    {
+      "id": 2116438018,
+      "isk": 2444702712
+    },
+    {
+      "id": 2122275289,
+      "isk": 2372599930
+    },
+    {
+      "id": 2121647842,
+      "isk": 2196505811
+    },
+    {
+      "id": 2116058909,
+      "isk": 2160013534
+    },
+    {
+      "id": 2115937561,
+      "isk": 2160013534
+    },
+    {
+      "id": 2122229618,
+      "isk": 1803051334
+    },
+    {
+      "id": 2118375706,
+      "isk": 1296918849
+    },
+    {
+      "id": 2121987180,
+      "isk": 1108524515
+    },
+    {
+      "id": 2114982846,
+      "isk": 1013445068
+    },
+    {
+      "id": 1227545753,
+      "isk": 798970017
+    },
+    {
+      "id": 2115915279,
+      "isk": 789710415
+    },
+    {
+      "id": 443523026,
+      "isk": 775127531
+    },
+    {
+      "id": 1913733427,
+      "isk": 716580675
+    },
+    {
+      "id": 95865638,
+      "isk": 673308332
+    },
+    {
+      "id": 657854438,
+      "isk": 642940791
+    },
+    {
+      "id": 93652503,
+      "isk": 634389648
+    },
+    {
+      "id": 2121380536,
+      "isk": 601328583
+    },
+    {
+      "id": 95244788,
+      "isk": 549518428
+    },
+    {
+      "id": 2114373585,
+      "isk": 543182925
+    },
+    {
+      "id": 2113796405,
+      "isk": 536330011
+    },
+    {
+      "id": 92428798,
+      "isk": 533888605
+    },
+    {
+      "id": 91944625,
+      "isk": 529407884
+    },
+    {
+      "id": 2115701995,
+      "isk": 510796218
+    },
+    {
+      "id": 2120324508,
+      "isk": 484935607
+    }
+  ],
+  "topSolo": [
+    {
+      "id": 96151338,
+      "count": 2
+    },
+    {
+      "id": 2115915279,
+      "count": 2
+    },
+    {
+      "id": 2121729678,
+      "count": 2
+    },
+    {
+      "id": 2118375706,
+      "count": 1
+    },
+    {
+      "id": 2114280606,
+      "count": 1
+    },
+    {
+      "id": 1427166435,
+      "count": 1
+    },
+    {
+      "id": 93652503,
+      "count": 1
+    },
+    {
+      "id": 2120324508,
+      "count": 1
+    },
+    {
+      "id": 92902603,
+      "count": 1
+    },
+    {
+      "id": 2121987180,
+      "count": 1
+    },
+    {
+      "id": 2122229618,
+      "count": 1
+    },
+    {
+      "id": 96072785,
+      "count": 1
+    },
+    {
+      "id": 2120095959,
+      "count": 1
+    },
+    {
+      "id": 2119639838,
+      "count": 1
+    },
+    {
+      "id": 2122884268,
+      "count": 1
+    },
+    {
+      "id": 95865638,
+      "count": 1
+    },
+    {
+      "id": 2113077807,
+      "count": 1
+    }
+  ],
+  "names": {
+    "90286690": "Al Godox",
+    "90447488": "Kiramati",
+    "90692369": "Larcal",
+    "90894630": "Cael Sotken",
+    "91373964": "Abe Aideron",
+    "91944625": "alphaS subA",
+    "92428798": "gokill rememberanc3",
+    "92695444": "Podiatry MD",
+    "92816280": "Abandon CTRL",
+    "92902603": "Walter Achasse",
+    "93008694": "Sid Ohaya",
+    "93142877": "Jedir Shepard",
+    "93355049": "Malcoreh Vakarhn",
+    "93652503": "Chain Deepwood",
+    "94370435": "Jeb Hekard",
+    "94372542": "Talen Ross",
+    "94686565": "Rainbow666 Dash",
+    "95244788": "koti chen",
+    "95865638": "William Chen",
+    "96072785": "Semila Facteous",
+    "96151338": "Orome Aldaron",
+    "96363621": "Oven Dweller",
+    "96392826": "Sharagoth",
+    "96773076": "Admiral Gevera",
+    "96788499": "ZudilossWP",
+    "96969856": "Johanna Shazih",
+    "401889038": "stelios102",
+    "443523026": "GoldSnake",
+    "657854438": "Jagious",
+    "820474900": "Vantera",
+    "1172871680": "commander2131",
+    "1227545753": "FootyMD",
+    "1371809446": "FoxAzn",
+    "1427166435": "Jayoasis",
+    "1698502843": "Marcus Aelos",
+    "1885491546": "BigMatty",
+    "1913733427": "Whiskeydod",
+    "2112117796": "Anna Kadeyooh",
+    "2112173289": "John Canathen",
+    "2113072426": "Every Breath Youtake",
+    "2113077807": "Panda Hibra",
+    "2113191317": "q3rq3 rq23r2",
+    "2113349101": "Sparrow Jake",
+    "2113455144": "Gilgamesh of Uruk",
+    "2113620610": "Admiral Rogue Gevera",
+    "2113721926": "Yuu Wuu",
+    "2113796405": "AnUglyHyena",
+    "2114280606": "Cn Oramara",
+    "2114373585": "Hold this L",
+    "2114468750": "Jason Hammersmith",
+    "2114982846": "BeepBoop 010000100111010",
+    "2115519310": "Xarkon Arji",
+    "2115672449": "French koty",
+    "2115701995": "Autur",
+    "2115915279": "XD ChangZ",
+    "2115937561": "Long March",
+    "2115988062": "Baby Shark Doo",
+    "2116058909": "A Darklight",
+    "2116299818": "DOFsundabi sun",
+    "2116438018": "Storm Man",
+    "2116584051": "Captain Mondra",
+    "2116673624": "R0CKET odin",
+    "2116799132": "Sir Lancer",
+    "2117040026": "42Fox",
+    "2117585899": "Salvago Delende Est",
+    "2117893397": "Raneron",
+    "2118375706": "Soul Roving",
+    "2118485880": "RandomPilot",
+    "2118612871": "GarmurGirl Bathwater",
+    "2118641471": "FakeDelve",
+    "2119358603": "I Anchor Bubbles",
+    "2119466506": "Leather Bearback",
+    "2119639838": "mr cheng ge",
+    "2120095959": "DAS BOOST",
+    "2120324508": "wuxiangshadiao",
+    "2120365254": "Spooky Cyno",
+    "2121152180": "Pumon",
+    "2121380536": "Mog-Ri",
+    "2121647842": "Zadrian",
+    "2121729678": "siguruVS",
+    "2121987180": "Erza Scarlit",
+    "2122070105": "Anata no Usiro",
+    "2122229618": "Mong1ong",
+    "2122275289": "Pumonup",
+    "2122412180": "XiaoV32",
+    "2122678000": "Mog-Zi",
+    "2122736378": "Unify the world",
+    "2122884220": "Kgenivs",
+    "2122884268": "Xgenivs"
+  }
+}
