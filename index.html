@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>LD-DISP — Region+Month Preview</title>
+    <title>LD-DISP — Region + Start Date</title>
     <meta name="color-scheme" content="dark light" />
     <style>
       :root { --w: 1100px; --pad: 1rem; }
@@ -27,21 +27,21 @@
   <body>
     <header>
       <div class="wrap row">
-        <h1 id="title">LD-DISP — Region+Month Preview</h1>
+        <h1 id="title">TEST Alliance – Deployment Tracker</h1>
         <span id="status" class="muted">idle</span>
       </div>
       <div class="wrap row" style="margin-top:.5rem">
-        <button id="build">Build (first page, filtered)</button>
+        <button id="build">Build (first page, start-date filtered)</button>
         <span class="muted">Alliance: <code id="aid">?</code></span>
         <span class="muted">Region: <code id="rid">?</code> <span id="rname" class="muted"></span></span>
-        <span class="muted">Window: <code id="win">YYYY-M</code></span>
+        <span class="muted">Window: <code id="win">from → now</code></span>
       </div>
     </header>
 
     <main class="wrap">
       <section class="grid" style="margin-bottom:1rem">
         <div class="card">
-          <strong>Overview (first page in window)</strong>
+          <strong>Overview (first page, start-date window)</strong>
           <div style="height:.5rem"></div>
           <div class="row" style="justify-content: space-between;">
             <div class="muted">ISK killed</div>
@@ -62,7 +62,7 @@
 
       <section class="grid">
         <div class="card">
-          <strong>Top 10 — Solo kills (first page, window)</strong>
+          <strong>Top 10 — Solo kills (first page, start-date window)</strong>
           <div style="max-height:420px;overflow:auto;margin-top:.4rem">
             <table id="soloTable">
               <thead><tr><th>#</th><th>Pilot</th><th class="right">Solo</th></tr></thead>
@@ -72,7 +72,7 @@
         </div>
 
         <div class="card">
-          <strong>Top 10 — ISK destroyed (first page, window)</strong>
+          <strong>Top 10 — ISK destroyed (first page, start-date window)</strong>
           <div style="max-height:420px;overflow:auto;margin-top:.4rem">
             <table id="iskTable">
               <thead><tr><th>#</th><th>Pilot</th><th class="right">ISK</th></tr></thead>
@@ -84,12 +84,10 @@
     </main>
 
     <script type="module">
-      // helpers
       const $  = (s) => document.querySelector(s);
       const fmtISK = (n) => new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(Math.round(n)) + ' ISK';
       const fmtNum = (n) => new Intl.NumberFormat().format(n);
 
-      // DOM refs
       const statusEl = $('#status');
       const iskKilledEl = $('#iskKilled');
       const shipsKilledEl = $('#shipsKilled');
@@ -100,15 +98,14 @@
       const iskTBody  = document.querySelector('#iskTable tbody');
       const aidEl = $('#aid'), ridEl = $('#rid'), rnameEl = $('#rname'), winEl = $('#win');
 
-      // defaults; site.json can override
+      // defaults; site.json overrides them
       let CFG = {
-        title: 'LD-DISP — Region+Month Preview',
+        title: 'TEST Alliance – Deployment Tracker',
         allianceID: 498125261,
         goalISK: 500_000_000_000,
         regionID: 10000035,
         regionName: 'Deklein',
-        year: 2025,
-        month: 9
+        from: '2025-09-01'
       };
 
       try {
@@ -121,8 +118,27 @@
       aidEl.textContent = String(CFG.allianceID);
       ridEl.textContent = String(CFG.regionID);
       rnameEl.textContent = CFG.regionName ? `(${CFG.regionName})` : '';
-      winEl.textContent = `${Number(CFG.year)}-${Number(CFG.month)}`;
+      winEl.textContent = `${CFG.from} → now`;
       iskGoalEl.textContent = fmtISK(CFG.goalISK);
+
+      // parse start; used to filter rows, not to stop them
+      const start = CFG.from ? new Date(`${CFG.from}T00:00:00Z`) : null;
+      const y = start ? start.getUTCFullYear() : null;
+      const m = start ? (start.getUTCMonth() + 1) : null;
+
+      function parseKillTime(s) {
+        // zKB gives ISO; guard for space-separated forms
+        const raw = String(s || '');
+        const iso = raw.includes('T') ? raw : raw.replace(' ', 'T') + (raw.endsWith('Z') ? '' : 'Z');
+        const t = new Date(iso);
+        return isNaN(t) ? null : t;
+      }
+      function inRange(row) {
+        if (!start) return true;
+        const t = parseKillTime(row?.killmail_time);
+        if (!t) return true;
+        return t >= start;
+      }
 
       async function resolveNames(idSet) {
         const ids = [...idSet];
@@ -136,14 +152,14 @@
         return map;
       }
 
-      async function buildFirstPageWindow() {
+      async function buildFirstPageFrom() {
         statusEl.textContent = 'fetching…';
         iskKilledEl.textContent = '–'; shipsKilledEl.textContent = '–';
         goalPctEl.textContent = '0%'; goalBarEl.style.width = '0%';
         soloTBody.innerHTML = ''; iskTBody.innerHTML = '';
 
         const ZKB = { base: 'https://zkillboard.com/api' };
-        const ym = `year/${Number(CFG.year)}/month/${Number(CFG.month)}`;
+        const ym = (y && m) ? `year/${Number(y)}/month/${Number(m)}` : '';
         const allURL  = `${ZKB.base}/kills/allianceID/${CFG.allianceID}/regionID/${CFG.regionID}/${ym}/page/1/`;
         const soloURL = `${ZKB.base}/kills/solo/allianceID/${CFG.allianceID}/regionID/${CFG.regionID}/${ym}/page/1/`;
 
@@ -152,11 +168,15 @@
           fetch(soloURL, { cache: 'no-store' }).then(r => r.json())
         ]);
 
+        // Filter to >= start date
+        const allF  = (Array.isArray(all)  ? all  : []).filter(inRange);
+        const soloF = (Array.isArray(solo) ? solo : []).filter(inRange);
+
         let totalISK = 0, totalShips = 0;
         const iskByPilot = new Map();
         const nameIds = new Set();
 
-        for (const row of (Array.isArray(all) ? all : [])) {
+        for (const row of allF) {
           const value = row?.zkb?.totalValue || 0;
           totalISK  += value; totalShips += 1;
           for (const atk of (row.attackers || [])) {
@@ -168,7 +188,7 @@
         }
 
         const soloByPilot = new Map();
-        for (const row of (Array.isArray(solo) ? solo : [])) {
+        for (const row of soloF) {
           if (row?.zkb?.solo) {
             const attackers = (row.attackers || []).filter(a => a.character_id && !a.is_npc);
             if (attackers.length === 1 && attackers[0].alliance_id === CFG.allianceID) {
@@ -179,7 +199,6 @@
           }
         }
 
-        statusEl.textContent = 'resolving names…';
         const idToName = await resolveNames(nameIds);
 
         iskKilledEl.textContent = fmtISK(totalISK);
@@ -197,11 +216,11 @@
         render(iskTBody,  [...iskByPilot.entries()].sort((a,b)=>b[1]-a[1]), v => fmtISK(v));
         render(soloTBody, [...soloByPilot.entries()].sort((a,b)=>b[1]-a[1]), v => fmtNum(v));
 
-        statusEl.textContent = 'done (first page, window)';
+        statusEl.textContent = 'done (first page, from-date)';
       }
 
       document.getElementById('build').addEventListener('click', () => {
-        buildFirstPageWindow().catch(e => { statusEl.textContent = 'error'; console.error(e); });
+        buildFirstPageFrom().catch(e => { statusEl.textContent = 'error'; console.error(e); });
       });
     </script>
   </body>
