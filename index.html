@@ -1,0 +1,24 @@
+<!-- /index.html -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LD-DISP — it works</title>
+    <meta name="color-scheme" content="dark light" />
+    <style>body{font-family:system-ui;margin:2rem;max-width:900px}.muted{opacity:.7}</style>
+  </head>
+  <body>
+    <h1>LD-DISP — it works 🎯</h1>
+    <p class="muted">Live Server is reading files from this folder.</p>
+    <h2>site.json</h2>
+    <pre id="cfg">(loading…)</pre>
+
+    <script>
+      fetch('./site.json')
+        .then(r => r.ok ? r.text() : '(missing)')
+        .then(txt => { document.getElementById('cfg').textContent = txt || '(empty)'; })
+        .catch(err => { document.getElementById('cfg').textContent = String(err); });
+    </script>
+  </body>
+</html>
