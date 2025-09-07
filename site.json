@@ -10,6 +10,6 @@
   "rateMs": 400,       
   "pageCap": 50,       
 
-  "esiRateMs": 200,    
-  "esiCap": 500        
+  "esiRateMs": 250,    
+  "esiCap": 150        
 }
