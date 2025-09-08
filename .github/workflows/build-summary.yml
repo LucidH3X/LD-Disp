@@ -1,9 +1,8 @@
-# .github/workflows/build-summary.yml
+# .github/workflows/build-summary.yml (set to every 10 minutes)
 name: Build summary
-
 on:
   schedule:
-    - cron: "*/10 * * * *"   # every 10 minutes
+    - cron: "*/10 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -17,14 +16,11 @@ jobs:
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-
       - name: Build JSON
         run: node tools/build-summary.mjs
-
       - name: Publish snapshot into docs
         run: |
           mkdir -p docs/data
@@ -33,7 +29,6 @@ jobs:
           else
             echo '{"generatedAt":"","totals":{"isk":0,"ships":0,"goalPct":0},"topISK":[],"topSolo":[],"names":{}}' > docs/data/summary.json
           fi
-
       - name: Commit snapshot
         run: |
           git config user.name  "github-actions[bot]"
