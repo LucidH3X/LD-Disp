@@ -1,4 +1,3 @@
-<!-- index.html (drop-in replacement for your current file) -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -33,21 +32,23 @@
   .card { border:1px solid var(--border); border-radius:18px; padding:1rem; background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03)); backdrop-filter: blur(10px); box-shadow: var(--shadow); }
   .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; }
 
-  table { width:100%; border-collapse:collapse; font-size:.95rem; }
+  table { width:100%; border-collapse: collapse; font-size:.95rem; }
   th, td { padding:.6rem .5rem; border-bottom:1px solid var(--border2); text-align:left; }
   thead th { font-weight:600; color:var(--muted); }
   tbody tr:hover { background: rgba(255,255,255,.03); }
   .right { text-align:right; }
 
-  /* buttons (admin-only; hidden by default) */
+  /* buttons */
   button { font:inherit; padding:.55rem .85rem; border-radius:12px; border:1px solid var(--border); color:var(--text);
            background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04)); backdrop-filter: blur(6px);
            box-shadow: 0 6px 14px rgba(0,0,0,.25); transition:.12s ease; }
   button:hover { transform: translateY(-1px); border-color: rgba(122,162,255,.5); box-shadow: 0 8px 18px rgba(122,162,255,.25); }
   button#build, button#load { border-color: rgba(122,162,255,.5); background: linear-gradient(180deg, rgba(122,162,255,.18), rgba(122,162,255,.06)); }
   button#clear, button#stop { border-color: rgba(192,125,255,.35); background: linear-gradient(180deg, rgba(192,125,255,.14), rgba(192,125,255,.05)); }
-  .admin { display: none; }
-  .admin-on .admin { display: inline-flex; } /* or inline-block */
+
+  /* admin controls: hidden by default; show with .admin-on on <html> */
+  .admin { display:none; }
+  .admin-on .admin { display:inline-flex; }
 
   /* progress bar */
   .bar { height:10px; border-radius:999px; border:1px solid var(--border); background: rgba(255,255,255,.06); overflow:hidden; }
@@ -70,7 +71,6 @@
   .table-wrap { margin-top:.4rem; max-height:none; overflow:visible; }
   @media (max-height:720px){ .table-wrap{ max-height:360px; overflow:auto; } }
 
-  /* stale timestamp */
   .stale { color:#ffb86b; }
 </style>
 </head>
@@ -146,8 +146,9 @@
 </main>
 
 <script type="module">
-  /* --- starfield --- */
-  const canvas = document.getElementById('starfield'); const ctx = canvas.getContext('2d',{alpha:true});
+  /* ---------- starfield ---------- */
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d', { alpha: true });
   let W=0,H=0,DPR=Math.min(2,window.devicePixelRatio||1),stars=[];
   const rand=(a,b)=>a+Math.random()*(b-a);
   function resize(){ W=Math.floor(innerWidth); H=Math.floor(innerHeight); canvas.width=Math.floor(W*DPR); canvas.height=Math.floor(H*DPR); canvas.style.width=W+'px'; canvas.style.height=H+'px'; ctx.setTransform(DPR,0,0,DPR,0,0); }
@@ -155,7 +156,7 @@
   function draw(t){ ctx.clearRect(0,0,W,H); for(const s of stars){ const a=s.a0*(.6+.4*Math.sin(t*.001*s.tw+s.p)); ctx.globalAlpha=a; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fillStyle='#cfe3ff'; ctx.fill(); if(s.r>1.2&&a>.65){ ctx.globalAlpha=a*.6; ctx.beginPath(); ctx.moveTo(s.x-2,s.y); ctx.lineTo(s.x+2,s.y); ctx.moveTo(s.x,s.y-2); ctx.lineTo(s.x,s.y+2); ctx.strokeStyle='rgba(200,220,255,.6)'; ctx.lineWidth=.6; ctx.stroke(); } s.y+=s.drift*.2; if(s.y>H+2){ s.y=-2; s.x=rand(0,W);} } ctx.globalAlpha=1; }
   addEventListener('resize',()=>{resize();initStars();}); resize(); initStars(); requestAnimationFrame(function loop(t){draw(t||performance.now()); requestAnimationFrame(loop);});
 
-  /* --- app utils --- */
+  /* ---------- utils ---------- */
   const $ = (s)=>document.querySelector(s);
   const fmtISK=(n)=>new Intl.NumberFormat(undefined,{maximumFractionDigits:0}).format(Math.round(n))+' ISK';
   const fmtNum=(n)=>new Intl.NumberFormat().format(n);
@@ -165,20 +166,16 @@
   const corpLogo=(id,size=64)=>id?`https://images.evetech.net/corporations/${Number(id)}/logo?size=${size}`:'';
   const alliLogo=(id,size=64)=>id?`https://images.evetech.net/alliances/${Number(id)}/logo?size=${size}`:'';
   const rankHtml=(i)=> i===0?'<span class="medal gold">🥇</span>': i===1?'<span class="medal silver">🥈</span>': i===2?'<span class="medal bronze">🥉</span>': String(i+1);
-  function pilotCellHtml(id,name,meta){ const corp=meta?.corp||null, alli=meta?.alliance||null;
-    const corpImg=corp?`<img src="${corpLogo(corp,32)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''; 
-    const alliImg=alli?`<img src="${alliLogo(alli,32)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''; 
-    return `<a class="pilot" href="${zkbChar(id)}" target="_blank" rel="noopener noreferrer">
-      <img src="${avatarUrl(id,64)}" alt="" loading="lazy" referrerpolicy="no-referrer"><span>${name||id}</span><span class="icons">${alliImg}${corpImg}</span></a>`;}
+  function pilotCellHtml(id,name,meta){ const corp=meta?.corp||null, alli=meta?.alliance||null; const corpImg=corp?`<img src="${corpLogo(corp,32)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''; const alliImg=alli?`<img src="${alliLogo(alli,32)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''; return `<a class="pilot" href="${zkbChar(id)}" target="_blank" rel="noopener noreferrer"><img src="${avatarUrl(id,64)}" alt="" loading="lazy" referrerpolicy="no-referrer"><span>${name||id}</span><span class="icons">${alliImg}${corpImg}</span></a>`; }
 
-  /* --- DOM refs --- */
+  /* ---------- DOM refs ---------- */
   const statusEl=$('#status'), lastUpdateEl=$('#lastUpdate');
   const iskKilledEl=$('#iskKilled'), shipsKilledEl=$('#shipsKilled'), iskGoalEl=$('#iskGoal'), goalPctEl=$('#goalPct'), goalBarEl=$('#goalBar');
   const soloTBody=document.querySelector('#soloTable tbody'), iskTBody=document.querySelector('#iskTable tbody');
   const aidEl=$('#aid'), ridEl=$('#rid'), rnameEl=$('#rname'), winEl=$('#win');
   const pagesEl=$('#pages'), namesEl=$('#names'), rowsEl=$('#rows'), esiEl=$('#esicalls');
 
-  /* --- config --- */
+  /* ---------- config ---------- */
   let CFG={ title:'TEST Alliance – Deployment Tracker', allianceID:498125261, goalISK:500_000_000_000, regionID:10000035, regionName:'Deklein', from:'2025-09-01', rateMs:400, pageCap:10, esiRateMs:250, esiCap:150 };
   try{ const cfg=await (await fetch('./site.json',{cache:'no-store'})).json(); CFG={...CFG,...(cfg||{})}; }catch{}
   document.title=CFG.title||document.title; $('#title').textContent=CFG.title||$('#title').textContent;
@@ -187,82 +184,87 @@
   const parseKillTime=(s)=>{ const raw=String(s||''); const iso=raw.includes('T')?raw:raw.replace(' ','T')+(raw.endsWith('Z')?'':'Z'); const t=new Date(iso); return isNaN(t)?null:t; };
   function monthList(a,b){ const out=[]; const A=new Date(Date.UTC(a.getUTCFullYear(),a.getUTCMonth(),1)), B=new Date(Date.UTC(b.getUTCFullYear(),b.getUTCMonth(),1)); while(A<=B){ out.push({y:A.getUTCFullYear(),m:A.getUTCMonth()+1}); A.setUTCMonth(A.getUTCMonth()+1);} return out; }
 
-  /* --- cache --- */
+  /* ---------- cache ---------- */
   const Cache={ get:k=>{try{return JSON.parse(localStorage.getItem(k)||'null')}catch{return null}}, set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}, delPrefix:(p)=>{for(const k of Object.keys(localStorage)) if(k.startsWith(p)) localStorage.removeItem(k);} };
 
-  /* --- network --- */
+  /* ---------- network ---------- */
   const ZKB={base:'https://zkillboard.com/api'};
   async function getZKB(path){ const url=`${ZKB.base}${path}?_=${Date.now()}`; let data=[]; try{ const r=await fetch(url,{cache:'no-store'}); if(r.ok){ const body=await r.json(); if(Array.isArray(body)) data=body; } }catch{} pagesEl.textContent=String(Number(pagesEl.textContent)+1); rowsEl.textContent=String(Number(rowsEl.textContent)+(Array.isArray(data)?data.length:0)); return data; }
-  async function getESIKillmail(id,hash){ const key=`esi:km:${id}`; const hit=Cache.get(key); if(hit&&hit.attackers) return hit; if(Number(esiEl.textContent)>=Number(CFG.esiCap)) return null;
-    try{ const r=await fetch(`https://esi.evetech.net/latest/killmails/${id}/${hash}/?datasource=tranquility`,{cache:'no-store'}); if(!r.ok) return null; const km=await r.json(); const keep={attackers:km.attackers||[]}; Cache.set(key,keep); esiEl.textContent=String(Number(esiEl.textContent)+1); await sleep(Number(CFG.esiRateMs)||0); return keep; }catch{ return null; } }
-  async function resolveNames(idSet){ const ids=[...idSet].map(Number).filter(Boolean), out=new Map(), miss=[]; for(const id of ids){ const v=Cache.get('name:'+id); if(v&&v.name) out.set(id,v.name); else miss.push(id); }
-    for(let i=0;i<miss.length;i+=900){ const slice=miss.slice(i,i+900); try{ const res=await fetch('https://esi.evetech.net/latest/universe/names/?datasource=tranquility',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(slice)}); const arr=await res.json(); namesEl.textContent=String(Number(namesEl.textContent)+1); for(const r of arr){ Cache.set('name:'+r.id,{name:r.name}); out.set(r.id,r.name);} }catch{} await sleep(100);} return out; }
-  async function getCharMeta(id){ const key=`meta:char:${id}`; const hit=Cache.get(key); if(hit&&(hit.corporation_id||hit.alliance_id)) return hit;
-    try{ const r=await fetch(`https://esi.evetech.net/latest/characters/${Number(id)}/?datasource=tranquility`,{cache:'no-store'}); if(!r.ok) return null; const j=await r.json(); const meta={corporation_id:j.corporation_id||null, alliance_id:j.alliance_id||null}; Cache.set(key,meta); await sleep(120); return meta; }catch{ return null; } }
+  async function getESIKillmail(id,hash){ const key=`esi:km:${id}`; const hit=Cache.get(key); if(hit&&hit.attackers) return hit; if(Number(esiEl.textContent)>=Number(CFG.esiCap)) return null; try{ const r=await fetch(`https://esi.evetech.net/latest/killmails/${id}/${hash}/?datasource=tranquility`,{cache:'no-store'}); if(!r.ok) return null; const km=await r.json(); const keep={attackers:km.attackers||[]}; Cache.set(key,keep); esiEl.textContent=String(Number(esiEl.textContent)+1); await sleep(Number(CFG.esiRateMs)||0); return keep; }catch{ return null; } }
+  async function resolveNames(idSet){ const ids=[...idSet].map(Number).filter(Boolean), out=new Map(), miss=[]; for(const id of ids){ const v=Cache.get('name:'+id); if(v&&v.name) out.set(id,v.name); else miss.push(id); } for(let i=0;i<miss.length;i+=900){ const slice=miss.slice(i,i+900); try{ const res=await fetch('https://esi.evetech.net/latest/universe/names/?datasource=tranquility',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(slice)}); const arr=await res.json(); namesEl.textContent=String(Number(namesEl.textContent)+1); for(const r of arr){ Cache.set('name:'+r.id,{name:r.name}); out.set(r.id,r.name);} }catch{} await sleep(100);} return out; }
+  async function getCharMeta(id){ const key=`meta:char:${id}`; const hit=Cache.get(key); if(hit&&(hit.corporation_id||hit.alliance_id)) return hit; try{ const r=await fetch(`https://esi.evetech.net/latest/characters/${Number(id)}/?datasource=tranquility`,{cache:'no-store'}); if(!r.ok) return null; const j=await r.json(); const meta={corporation_id:j.corporation_id||null, alliance_id:j.alliance_id||null}; Cache.set(key,meta); await sleep(120); return meta; }catch{ return null; } }
 
-  /* --- aggregation helpers --- */
+  /* ---------- aggregation helpers ---------- */
   const countTo=(m,id,by=1)=>m.set(id,(m.get(id)||0)+by);
   const charMeta=new Map();
   function setMetaFromAtk(a){ if(!a?.character_id) return; const prev=charMeta.get(a.character_id)||{}; charMeta.set(a.character_id,{corp: a.corporation_id??prev.corp??null, alliance: a.alliance_id??prev.alliance??null}); }
   function extractTesters(src,collect=true){ const atks=src?.attackers||[]; const testers=atks.filter(a=>a.character_id&&!a.is_npc&&a.alliance_id===CFG.allianceID); if(collect) testers.forEach(setMetaFromAtk); return testers.map(a=>a.character_id); }
   function isSoloByTest(src,collect=true){ const atks=src?.attackers||[]; const nonNpc=atks.filter(a=>a.character_id&&!a.is_npc); const solo=(nonNpc.length===1&&nonNpc[0].alliance_id===CFG.allianceID)?nonNpc[0]:null; if(solo&&collect) setMetaFromAtk(solo); return solo?solo.character_id:null; }
 
-  /* --- live builder (kept for admin) --- */
+  /* ---------- live builder (admin) ---------- */
   let ABORT=false;
-  async function buildFromStart(){ /* unchanged from previous; omitted for brevity in this auto mode */ }
+  async function buildFromStart(){
+    ABORT=false;
+    statusEl.textContent='starting…';
+    iskKilledEl.textContent='–'; shipsKilledEl.textContent='–'; goalPctEl.textContent='0%'; goalBarEl.style.width='0%';
+    soloTBody.innerHTML=''; iskTBody.innerHTML=''; pagesEl.textContent='0'; namesEl.textContent='0'; rowsEl.textContent='0'; esiEl.textContent='0'; charMeta.clear();
 
-  /* --- snapshot loader --- */
-  async function enrichMetaForTop(ids){ const tasks=[]; for(const id of ids){ if(charMeta.has(id)) continue; const cached=Cache.get(`meta:char:${id}`); if(cached){ charMeta.set(id,{corp:cached.corporation_id||null, alliance:cached.alliance_id||null}); continue; }
-      tasks.push((async()=>{ const meta=await getCharMeta(id); if(meta) charMeta.set(id,{corp:meta.corporation_id||null, alliance:meta.alliance_id||null}); })()); } await Promise.all(tasks); }
+    const now=new Date();
+    const months=monthList(startDate||now,now);
+
+    let totalISK=0,totalShips=0; const iskByPilot=new Map(); const soloByPilot=new Map(); const nameIds=new Set();
+
+    for(const {y,m} of months){ if(ABORT) break;
+      // KILLS
+      for(let page=1; !ABORT; page++){ if(CFG.pageCap && page>CFG.pageCap) break; const killsPath=`/kills/allianceID/${CFG.allianceID}/regionID/${CFG.regionID}/year/${Number(y)}/month/${Number(m)}/page/${page}/`; statusEl.textContent=`kills ${y}-${m} p${page}…`; const rows=await getZKB(killsPath); if(!rows.length) break; for(const row of rows){ const t=parseKillTime(row.killmail_time); if(startDate && t && t<startDate) continue; const value=row?.zkb?.totalValue||0; totalISK+=value; totalShips+=1; let src=row; if(!Array.isArray(row.attackers)||row.attackers.length===0){ const km=await getESIKillmail(row.killmail_id,row?.zkb?.hash); if(km) src=km; } const testers=extractTesters(src,true); if(testers.length){ for(const id of testers){ countTo(iskByPilot,id,value); nameIds.add(id);} } } iskKilledEl.textContent=fmtISK(totalISK); shipsKilledEl.textContent=fmtNum(totalShips); const pct=Math.max(0,Math.min(100,(totalISK/CFG.goalISK)*100)); goalPctEl.textContent=pct.toFixed(1)+'%'; goalBarEl.style.width=pct+'%'; await sleep(Number(CFG.rateMs)||0); }
+      // SOLO
+      for(let page=1; !ABORT; page++){ if(CFG.pageCap && page>CFG.pageCap) break; const soloPath=`/kills/solo/allianceID/${CFG.allianceID}/regionID/${CFG.regionID}/year/${Number(y)}/month/${Number(m)}/page/${page}/`; statusEl.textContent=`solo ${y}-${m} p${page}…`; const rows=await getZKB(soloPath); if(!rows.length) break; for(const row of rows){ const t=parseKillTime(row.killmail_time); if(startDate && t && t<startDate) continue; let src=row; if(!Array.isArray(row.attackers)||row.attackers.length===0){ const km=await getESIKillmail(row.killmail_id,row?.zkb?.hash); if(km) src=km; } const soloId=isSoloByTest(src,true); if(soloId){ countTo(soloByPilot,soloId,1); nameIds.add(soloId); } } await sleep(Number(CFG.rateMs)||0); }
+    }
+
+    statusEl.textContent='resolving names…';
+    const idToName=await resolveNames(nameIds);
+    const render=(tbody,entries,fmt)=>{ const rows=entries.slice(0,10).map(([id,val],i)=>{ const name=idToName.get(Number(id))||String(id); const meta=charMeta.get(Number(id)); return `<tr><td>${rankHtml(i)}</td><td>${pilotCellHtml(id,name,meta)}</td><td class="right">${fmt(val)}</td></tr>`; }).join(''); tbody.innerHTML=rows||'<tr><td colspan="3" class="muted">no data</td></tr>'; };
+    render(iskTBody,[...iskByPilot.entries()].sort((a,b)=>b[1]-a[1]),v=>fmtISK(v));
+    render(soloTBody,[...soloByPilot.entries()].sort((a,b)=>b[1]-a[1]),v=>fmtNum(v));
+    statusEl.textContent=ABORT?'aborted':'done';
+  }
+
+  /* ---------- snapshot loader ---------- */
+  async function enrichMetaForTop(ids){ const tasks=[]; for(const id of ids){ if(charMeta.has(id)) continue; const cached=Cache.get(`meta:char:${id}`); if(cached){ charMeta.set(id,{corp:cached.corporation_id||null, alliance:cached.alliance_id||null}); continue; } tasks.push((async()=>{ const meta=await getCharMeta(id); if(meta) charMeta.set(id,{corp:meta.corporation_id||null, alliance:meta.alliance_id||null}); })()); } await Promise.all(tasks); }
 
   async function loadSnapshot(){
     statusEl.textContent='loading snapshot…';
     try{
       const url=new URL('data/summary.json',location.href);
       const res=await fetch(url.toString()+'?_='+Date.now(),{cache:'no-store'});
-      if(!res.ok){ statusEl.textContent=`snapshot error (${res.status})`; return; }
+      if(!res.ok){ statusEl.textContent=`snapshot error (${res.status}) — ${url.pathname}`; soloTBody.innerHTML='<tr><td colspan="3" class="muted">no snapshot</td></tr>'; iskTBody.innerHTML='<tr><td colspan="3" class="muted">no snapshot</td></tr>'; lastUpdateEl.textContent='n/a'; lastUpdateEl.classList.add('stale'); return; }
       const j=await res.json();
 
-      // overview
       iskKilledEl.textContent=fmtISK(j.totals.isk||0);
       shipsKilledEl.textContent=fmtNum(j.totals.ships||0);
       const pct=Number(j.totals.goalPct)||0; goalPctEl.textContent=pct.toFixed(1)+'%'; goalBarEl.style.width=pct+'%';
 
-      // names + render
       const idToName=new Map(Object.entries(j.names||{}).map(([k,v])=>[Number(k),v]));
       const topIds=new Set([...(j.topSolo||[]).slice(0,10).map(x=>x.id), ...(j.topISK||[]).slice(0,10).map(x=>x.id)]);
       await enrichMetaForTop(topIds);
 
-      const renderSnap=(tbody,list,fmtVal,key)=>{
-        const rows=(list||[]).slice(0,10).map((row,i)=>{
-          const name=idToName.get(row.id)||String(row.id);
-          const meta=charMeta.get(Number(row.id));
-          return `<tr><td>${rankHtml(i)}</td><td>${pilotCellHtml(row.id,name,meta)}</td><td class="right">${fmtVal(row[key])}</td></tr>`;
-        }).join('');
-        tbody.innerHTML=rows||'<tr><td colspan="3" class="muted">no data</td></tr>';
-      };
+      const renderSnap=(tbody,list,fmtVal,key)=>{ const rows=(list||[]).slice(0,10).map((row,i)=>{ const name=idToName.get(row.id)||String(row.id); const meta=charMeta.get(Number(row.id)); return `<tr><td>${rankHtml(i)}</td><td>${pilotCellHtml(row.id,name,meta)}</td><td class="right">${fmtVal(row[key])}</td></tr>`; }).join(''); tbody.innerHTML=rows||'<tr><td colspan="3" class="muted">no data</td></tr>'; };
       renderSnap(soloTBody,j.topSolo,v=>fmtNum(v),'count');
-      renderSnap(iskTBody,j.topISK,v=>fmtISK(v),'isk');
+      renderSnap(iskTBody, j.topISK, v=>fmtISK(v),'isk');
 
-      // timestamp badge + staleness
-      const ts = j.generatedAt || '';
-      lastUpdateEl.textContent = ts || 'n/a';
-      lastUpdateEl.classList.toggle('stale', ts && (Date.now() - Date.parse(ts) > 45*60*1000));
+      const ts=j.generatedAt||''; lastUpdateEl.textContent=ts||'n/a'; lastUpdateEl.classList.toggle('stale', ts && (Date.now()-Date.parse(ts)>45*60*1000));
       statusEl.textContent=`done (snapshot @ ${ts||'n/a'})`;
-    }catch(e){ statusEl.textContent='snapshot error'; console.error(e); }
+    }catch(e){ statusEl.textContent='snapshot error (network/JSON)'; console.error('snapshot load error:', e); }
   }
 
-  /* --- admin visibility (off by default) --- */
-  const ADMIN = new URLSearchParams(location.search).has('admin');
-  if (ADMIN) document.documentElement.classList.add('admin-on');
+  /* ---------- admin visibility ---------- */
+  const ADMIN=new URLSearchParams(location.search).has('admin');
+  if(ADMIN) document.documentElement.classList.add('admin-on');
 
-  /* --- auto load + auto refresh (no clicks needed) --- */
-  window.addEventListener('load', () => {
-    loadSnapshot();                    // initial render
-    setInterval(loadSnapshot, 10*60*1000); // refresh every 10 minutes
-  });
+  /* ---------- auto load + auto refresh ---------- */
+  window.addEventListener('load', ()=>{ loadSnapshot(); setInterval(loadSnapshot, 10*60*1000); });
 
-  /* --- admin button hooks (hidden unless ?admin=1) --- */
+  /* ---------- admin button hooks ---------- */
   document.getElementById('build')?.addEventListener('click',()=>{ buildFromStart().catch(e=>{statusEl.textContent='error'; console.error(e);}); });
   document.getElementById('stop')?.addEventListener('click',()=>{ ABORT=true; statusEl.textContent='stopping…'; });
   document.getElementById('clear')?.addEventListener('click',()=>{ Cache.delPrefix('esi:km:'); Cache.delPrefix('name:'); Cache.delPrefix('meta:char:'); pagesEl.textContent='0'; namesEl.textContent='0'; rowsEl.textContent='0'; esiEl.textContent='0'; statusEl.textContent='cache cleared'; });
