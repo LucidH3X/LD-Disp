@@ -72,6 +72,12 @@
   @media (max-height:720px){ .table-wrap{ max-height:360px; overflow:auto; } }
 
   .stale { color:#ffb86b; }
+
+  /* freshness badge */
+  .badge{display:inline-flex;align-items:center;gap:.35rem;padding:.15rem .5rem;border-radius:999px;border:1px solid var(--border2);font-size:.75rem;line-height:1;background:rgba(255,255,255,.07)}
+  .badge.ok{color:#7de47f;border-color:rgba(96,255,140,.35);background:rgba(96,255,140,.08)}
+  .badge.stale{color:#ffb86b;border-color:rgba(255,184,107,.35);background:rgba(255,184,107,.08)}
+  .badge.err{color:#ff6b6b;border-color:rgba(255,107,107,.35);background:rgba(255,107,107,.08)}
 </style>
 </head>
 <body>
@@ -82,14 +88,15 @@
   <div class="wrap row">
     <h1 id="title">TEST Alliance – Deployment Tracker</h1>
     <span id="status" class="muted">idle</span>
-    <span class="muted tiny">Updated: <code id="lastUpdate">—</code></span>
+    <span class="muted tiny">Updated: <code id="lastUpdate">—</code> <span id="ageBadge" class="badge">—</span></span>
   </div>
   <div class="wrap row" style="margin-top:.5rem">
     <!-- admin-only controls; hidden unless ?admin=1 -->
     <button id="build" class="admin">Build (from start → now)</button>
     <button id="stop" class="admin">Stop</button>
     <button id="load" class="admin">Load snapshot</button>
-    <button id="clear" class="admin">Clear cache</button>
+    <button id="clear" class="admin">Clear cache<\/button>
+    <button id="refresh" class="admin" title="Trigger workflow & reload">Refresh snapshot now<\/button>
     <span class="muted">Alliance: <code id="aid">?</code></span>
     <span class="muted">Region: <code id="rid">?</code> <span id="rname" class="muted"></span></span>
     <span class="muted">Window: <code id="win">from → now</code></span>
@@ -169,7 +176,7 @@
   function pilotCellHtml(id,name,meta){ const corp=meta?.corp||null, alli=meta?.alliance||null; const corpImg=corp?`<img src="${corpLogo(corp,32)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''; const alliImg=alli?`<img src="${alliLogo(alli,32)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''; return `<a class="pilot" href="${zkbChar(id)}" target="_blank" rel="noopener noreferrer"><img src="${avatarUrl(id,64)}" alt="" loading="lazy" referrerpolicy="no-referrer"><span>${name||id}</span><span class="icons">${alliImg}${corpImg}</span></a>`; }
 
   /* ---------- DOM refs ---------- */
-  const statusEl=$('#status'), lastUpdateEl=$('#lastUpdate');
+  const statusEl=$('#status'), lastUpdateEl=$('#lastUpdate'), ageBadge=$('#ageBadge');
   const iskKilledEl=$('#iskKilled'), shipsKilledEl=$('#shipsKilled'), iskGoalEl=$('#iskGoal'), goalPctEl=$('#goalPct'), goalBarEl=$('#goalBar');
   const soloTBody=document.querySelector('#soloTable tbody'), iskTBody=document.querySelector('#iskTable tbody');
   const aidEl=$('#aid'), ridEl=$('#rid'), rnameEl=$('#rname'), winEl=$('#win');
@@ -232,12 +239,26 @@
   /* ---------- snapshot loader ---------- */
   async function enrichMetaForTop(ids){ const tasks=[]; for(const id of ids){ if(charMeta.has(id)) continue; const cached=Cache.get(`meta:char:${id}`); if(cached){ charMeta.set(id,{corp:cached.corporation_id||null, alliance:cached.alliance_id||null}); continue; } tasks.push((async()=>{ const meta=await getCharMeta(id); if(meta) charMeta.set(id,{corp:meta.corporation_id||null, alliance:meta.alliance_id||null}); })()); } await Promise.all(tasks); }
 
+  function setFreshness(ts){
+    let cls='err', label='error';
+    if(!ts){ cls='err'; label='no data'; }
+    else {
+      const age = Date.now() - Date.parse(ts);
+      if (isNaN(age)) { cls='err'; label='bad time'; }
+      else if (age <= 30*60*1000) { cls='ok'; label='fresh'; }
+      else { cls='stale'; label='stale'; }
+    }
+    ageBadge.classList.remove('ok','stale','err');
+    ageBadge.classList.add(cls);
+    ageBadge.textContent = label;
+  }
+
   async function loadSnapshot(){
     statusEl.textContent='loading snapshot…';
     try{
       const url=new URL('data/summary.json',location.href);
       const res=await fetch(url.toString()+'?_='+Date.now(),{cache:'no-store'});
-      if(!res.ok){ statusEl.textContent=`snapshot error (${res.status}) — ${url.pathname}`; soloTBody.innerHTML='<tr><td colspan="3" class="muted">no snapshot</td></tr>'; iskTBody.innerHTML='<tr><td colspan="3" class="muted">no snapshot</td></tr>'; lastUpdateEl.textContent='n/a'; lastUpdateEl.classList.add('stale'); return; }
+      if(!res.ok){ statusEl.textContent=`snapshot error (${res.status}) — ${url.pathname}`; soloTBody.innerHTML='<tr><td colspan="3" class="muted">no snapshot</td></tr>'; iskTBody.innerHTML='<tr><td colspan="3" class="muted">no snapshot</td></tr>'; lastUpdateEl.textContent='n/a'; lastUpdateEl.classList.add('stale'); setFreshness(''); return; }
       const j=await res.json();
 
       iskKilledEl.textContent=fmtISK(j.totals.isk||0);
@@ -252,9 +273,9 @@
       renderSnap(soloTBody,j.topSolo,v=>fmtNum(v),'count');
       renderSnap(iskTBody, j.topISK, v=>fmtISK(v),'isk');
 
-      const ts=j.generatedAt||''; lastUpdateEl.textContent=ts||'n/a'; lastUpdateEl.classList.toggle('stale', ts && (Date.now()-Date.parse(ts)>45*60*1000));
+      const ts=j.generatedAt||''; lastUpdateEl.textContent=ts||'n/a'; setFreshness(ts);
       statusEl.textContent=`done (snapshot @ ${ts||'n/a'})`;
-    }catch(e){ statusEl.textContent='snapshot error (network/JSON)'; console.error('snapshot load error:', e); }
+    }catch(e){ statusEl.textContent='snapshot error (network/JSON)'; console.error('snapshot load error:', e); setFreshness(''); }
   }
 
   /* ---------- admin visibility ---------- */
@@ -269,6 +290,20 @@
   document.getElementById('stop')?.addEventListener('click',()=>{ ABORT=true; statusEl.textContent='stopping…'; });
   document.getElementById('clear')?.addEventListener('click',()=>{ Cache.delPrefix('esi:km:'); Cache.delPrefix('name:'); Cache.delPrefix('meta:char:'); pagesEl.textContent='0'; namesEl.textContent='0'; rowsEl.textContent='0'; esiEl.textContent='0'; statusEl.textContent='cache cleared'; });
   document.getElementById('load')?.addEventListener('click',()=>{ loadSnapshot().catch(e=>{statusEl.textContent='snapshot error'; console.error(e);}); });
-</script>
-</body>
-</html>
+  document.getElementById('refresh')?.addEventListener('click', async ()=>{
+    const gh = CFG.github || {}; // { owner, repo, workflow, ref }
+    const owner = gh.owner, repo = gh.repo, workflow = gh.workflow || 'build-summary.yml', ref = gh.ref || 'main';
+    const actionsPage = `https://github.com/${owner||'YOUR_OWNER'}/${repo||'YOUR_REPO'}/actions/workflows/${workflow}`;
+    try {
+      const token = localStorage.getItem('gh_token');
+      if (owner && repo && token) {
+        statusEl.textContent = 'dispatching workflow…';
+        const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflow}/dispatches`, {
+          method:'POST', headers:{ 'Accept':'application/vnd.github+json', 'Authorization':`Bearer ${token}` },
+          body: JSON.stringify({ ref })
+        });
+        if (res.ok) { statusEl.textContent = 'workflow dispatched — reloading snapshot soon…'; setTimeout(loadSnapshot, 30*1000); return; }
+      }
+    } catch {}
+    window.open(actionsPage, '_blank');
+  });
