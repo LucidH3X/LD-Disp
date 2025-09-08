@@ -2,6 +2,20 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
+<!-- admin bootstrap: turns on admin UI via ?admin=1 or sticky localStorage.admin='1' -->
+<script>
+(function () {
+  try {
+    var q = new URLSearchParams(location.search);
+    var fromQ = q.get('admin');
+    if (fromQ === '1') localStorage.setItem('admin','1');
+    if (fromQ === '0') localStorage.removeItem('admin');
+    if (fromQ === '1' || localStorage.getItem('admin') === '1') {
+      document.documentElement.classList.add('admin-on');
+    }
+  } catch (e) {}
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>TEST Alliance – Deployment Tracker</title>
 <meta name="color-scheme" content="dark light" />
@@ -43,12 +57,12 @@
            background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04)); backdrop-filter: blur(6px);
            box-shadow: 0 6px 14px rgba(0,0,0,.25); transition:.12s ease; }
   button:hover { transform: translateY(-1px); border-color: rgba(122,162,255,.5); box-shadow: 0 8px 18px rgba(122,162,255,.25); }
-  button#build, button#load { border-color: rgba(122,162,255,.5); background: linear-gradient(180deg, rgba(122,162,255,.18), rgba(122,162,255,.06)); }
+  button#build, button#load, button#refreshWF { border-color: rgba(122,162,255,.5); background: linear-gradient(180deg, rgba(122,162,255,.18), rgba(122,162,255,.06)); }
   button#clear, button#stop { border-color: rgba(192,125,255,.35); background: linear-gradient(180deg, rgba(192,125,255,.14), rgba(192,125,255,.05)); }
 
-  /* admin controls: hidden by default; show with .admin-on on <html> */
-  .admin { display:none; }
-  .admin-on .admin { display:inline-flex; }
+  /* admin controls: hidden by default; visible when <html> has .admin-on */
+  .admin { display: none; }
+  .admin-on .admin { display: inline-flex; }
 
   /* progress bar */
   .bar { height:10px; border-radius:999px; border:1px solid var(--border); background: rgba(255,255,255,.06); overflow:hidden; }
@@ -71,13 +85,11 @@
   .table-wrap { margin-top:.4rem; max-height:none; overflow:visible; }
   @media (max-height:720px){ .table-wrap{ max-height:360px; overflow:auto; } }
 
-  .stale { color:#ffb86b; }
-
-  /* freshness badge */
-  .badge{display:inline-flex;align-items:center;gap:.35rem;padding:.15rem .5rem;border-radius:999px;border:1px solid var(--border2);font-size:.75rem;line-height:1;background:rgba(255,255,255,.07)}
-  .badge.ok{color:#7de47f;border-color:rgba(96,255,140,.35);background:rgba(96,255,140,.08)}
-  .badge.stale{color:#ffb86b;border-color:rgba(255,184,107,.35);background:rgba(255,184,107,.08)}
-  .badge.err{color:#ff6b6b;border-color:rgba(255,107,107,.35);background:rgba(255,107,107,.08)}
+  /* updated badge states */
+  .badge { padding:.05rem .4rem; border-radius:6px; border:1px solid var(--border2); }
+  .fresh { color:#9dfaa0; border-color:#3f8f57; background:rgba(63,143,87,.15); }
+  .stale { color:#ffb86b; border-color:#a86b2a; background:rgba(168,107,42,.15); }
+  .err   { color:#ff6b6b; border-color:#a83a3a; background:rgba(168,58,58,.15); }
 </style>
 </head>
 <body>
@@ -88,15 +100,15 @@
   <div class="wrap row">
     <h1 id="title">TEST Alliance – Deployment Tracker</h1>
     <span id="status" class="muted">idle</span>
-    <span class="muted tiny">Updated: <code id="lastUpdate">—</code> <span id="ageBadge" class="badge">—</span></span>
+    <span class="muted tiny">Updated: <code id="lastUpdate" class="badge">—</code></span>
   </div>
   <div class="wrap row" style="margin-top:.5rem">
-    <!-- admin-only controls; hidden unless ?admin=1 -->
+    <!-- admin-only controls; hidden unless ?admin=1 or sticky -->
     <button id="build" class="admin">Build (from start → now)</button>
     <button id="stop" class="admin">Stop</button>
     <button id="load" class="admin">Load snapshot</button>
-    <button id="clear" class="admin">Clear cache<\/button>
-    <button id="refresh" class="admin" title="Trigger workflow & reload">Refresh snapshot now<\/button>
+    <button id="clear" class="admin">Clear cache</button>
+    <button id="refreshWF" class="admin">Refresh snapshot now</button>
     <span class="muted">Alliance: <code id="aid">?</code></span>
     <span class="muted">Region: <code id="rid">?</code> <span id="rname" class="muted"></span></span>
     <span class="muted">Window: <code id="win">from → now</code></span>
@@ -176,14 +188,14 @@
   function pilotCellHtml(id,name,meta){ const corp=meta?.corp||null, alli=meta?.alliance||null; const corpImg=corp?`<img src="${corpLogo(corp,32)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''; const alliImg=alli?`<img src="${alliLogo(alli,32)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''; return `<a class="pilot" href="${zkbChar(id)}" target="_blank" rel="noopener noreferrer"><img src="${avatarUrl(id,64)}" alt="" loading="lazy" referrerpolicy="no-referrer"><span>${name||id}</span><span class="icons">${alliImg}${corpImg}</span></a>`; }
 
   /* ---------- DOM refs ---------- */
-  const statusEl=$('#status'), lastUpdateEl=$('#lastUpdate'), ageBadge=$('#ageBadge');
+  const statusEl=$('#status'), lastUpdateEl=$('#lastUpdate');
   const iskKilledEl=$('#iskKilled'), shipsKilledEl=$('#shipsKilled'), iskGoalEl=$('#iskGoal'), goalPctEl=$('#goalPct'), goalBarEl=$('#goalBar');
   const soloTBody=document.querySelector('#soloTable tbody'), iskTBody=document.querySelector('#iskTable tbody');
   const aidEl=$('#aid'), ridEl=$('#rid'), rnameEl=$('#rname'), winEl=$('#win');
   const pagesEl=$('#pages'), namesEl=$('#names'), rowsEl=$('#rows'), esiEl=$('#esicalls');
 
   /* ---------- config ---------- */
-  let CFG={ title:'TEST Alliance – Deployment Tracker', allianceID:498125261, goalISK:500_000_000_000, regionID:10000035, regionName:'Deklein', from:'2025-09-01', rateMs:400, pageCap:10, esiRateMs:250, esiCap:150 };
+  let CFG={ title:'TEST Alliance – Deployment Tracker', allianceID:498125261, goalISK:500_000_000_000, regionID:10000035, regionName:'Deklein', from:'2025-09-01', rateMs:400, pageCap:50, esiRateMs:250, esiCap:150 };
   try{ const cfg=await (await fetch('./site.json',{cache:'no-store'})).json(); CFG={...CFG,...(cfg||{})}; }catch{}
   document.title=CFG.title||document.title; $('#title').textContent=CFG.title||$('#title').textContent;
   aidEl.textContent=String(CFG.allianceID); ridEl.textContent=String(CFG.regionID); rnameEl.textContent=CFG.regionName?`(${CFG.regionName})`:''; winEl.textContent=`${CFG.from} → now`; iskGoalEl.textContent=fmtISK(CFG.goalISK);
@@ -201,7 +213,7 @@
   async function resolveNames(idSet){ const ids=[...idSet].map(Number).filter(Boolean), out=new Map(), miss=[]; for(const id of ids){ const v=Cache.get('name:'+id); if(v&&v.name) out.set(id,v.name); else miss.push(id); } for(let i=0;i<miss.length;i+=900){ const slice=miss.slice(i,i+900); try{ const res=await fetch('https://esi.evetech.net/latest/universe/names/?datasource=tranquility',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(slice)}); const arr=await res.json(); namesEl.textContent=String(Number(namesEl.textContent)+1); for(const r of arr){ Cache.set('name:'+r.id,{name:r.name}); out.set(r.id,r.name);} }catch{} await sleep(100);} return out; }
   async function getCharMeta(id){ const key=`meta:char:${id}`; const hit=Cache.get(key); if(hit&&(hit.corporation_id||hit.alliance_id)) return hit; try{ const r=await fetch(`https://esi.evetech.net/latest/characters/${Number(id)}/?datasource=tranquility`,{cache:'no-store'}); if(!r.ok) return null; const j=await r.json(); const meta={corporation_id:j.corporation_id||null, alliance_id:j.alliance_id||null}; Cache.set(key,meta); await sleep(120); return meta; }catch{ return null; } }
 
-  /* ---------- aggregation helpers ---------- */
+  /* ---------- aggregation ---------- */
   const countTo=(m,id,by=1)=>m.set(id,(m.get(id)||0)+by);
   const charMeta=new Map();
   function setMetaFromAtk(a){ if(!a?.character_id) return; const prev=charMeta.get(a.character_id)||{}; charMeta.set(a.character_id,{corp: a.corporation_id??prev.corp??null, alliance: a.alliance_id??prev.alliance??null}); }
@@ -223,42 +235,106 @@
 
     for(const {y,m} of months){ if(ABORT) break;
       // KILLS
-      for(let page=1; !ABORT; page++){ if(CFG.pageCap && page>CFG.pageCap) break; const killsPath=`/kills/allianceID/${CFG.allianceID}/regionID/${CFG.regionID}/year/${Number(y)}/month/${Number(m)}/page/${page}/`; statusEl.textContent=`kills ${y}-${m} p${page}…`; const rows=await getZKB(killsPath); if(!rows.length) break; for(const row of rows){ const t=parseKillTime(row.killmail_time); if(startDate && t && t<startDate) continue; const value=row?.zkb?.totalValue||0; totalISK+=value; totalShips+=1; let src=row; if(!Array.isArray(row.attackers)||row.attackers.length===0){ const km=await getESIKillmail(row.killmail_id,row?.zkb?.hash); if(km) src=km; } const testers=extractTesters(src,true); if(testers.length){ for(const id of testers){ countTo(iskByPilot,id,value); nameIds.add(id);} } } iskKilledEl.textContent=fmtISK(totalISK); shipsKilledEl.textContent=fmtNum(totalShips); const pct=Math.max(0,Math.min(100,(totalISK/CFG.goalISK)*100)); goalPctEl.textContent=pct.toFixed(1)+'%'; goalBarEl.style.width=pct+'%'; await sleep(Number(CFG.rateMs)||0); }
+      for(let page=1; !ABORT; page++){
+        if(CFG.pageCap && page>CFG.pageCap) break;
+        const killsPath=`/kills/allianceID/${CFG.allianceID}/regionID/${CFG.regionID}/year/${Number(y)}/month/${Number(m)}/page/${page}/`;
+        statusEl.textContent=`kills ${y}-${m} p${page}…`;
+        const rows=await getZKB(killsPath);
+        if(!rows.length) break;
+
+        for(const row of rows){
+          const t=parseKillTime(row.killmail_time);
+          if(startDate && t && t<startDate) continue;
+
+          const value=row?.zkb?.totalValue||0;
+          totalISK+=value; totalShips+=1;
+
+          let src=row;
+          if(!Array.isArray(row.attackers)||row.attackers.length===0){
+            const km=await getESIKillmail(row.killmail_id,row?.zkb?.hash);
+            if(km) src=km;
+          }
+
+          const testers=extractTesters(src,true);
+          if(testers.length){
+            for(const id of testers){ countTo(iskByPilot,id,value); nameIds.add(id); }
+          }
+        }
+
+        iskKilledEl.textContent=fmtISK(totalISK);
+        shipsKilledEl.textContent=fmtNum(totalShips);
+        const pct=Math.max(0,Math.min(100,(totalISK/CFG.goalISK)*100));
+        goalPctEl.textContent=pct.toFixed(1)+'%';
+        goalBarEl.style.width=pct+'%';
+
+        await sleep(Number(CFG.rateMs)||0);
+      }
+
       // SOLO
-      for(let page=1; !ABORT; page++){ if(CFG.pageCap && page>CFG.pageCap) break; const soloPath=`/kills/solo/allianceID/${CFG.allianceID}/regionID/${CFG.regionID}/year/${Number(y)}/month/${Number(m)}/page/${page}/`; statusEl.textContent=`solo ${y}-${m} p${page}…`; const rows=await getZKB(soloPath); if(!rows.length) break; for(const row of rows){ const t=parseKillTime(row.killmail_time); if(startDate && t && t<startDate) continue; let src=row; if(!Array.isArray(row.attackers)||row.attackers.length===0){ const km=await getESIKillmail(row.killmail_id,row?.zkb?.hash); if(km) src=km; } const soloId=isSoloByTest(src,true); if(soloId){ countTo(soloByPilot,soloId,1); nameIds.add(soloId); } } await sleep(Number(CFG.rateMs)||0); }
+      for(let page=1; !ABORT; page++){
+        if(CFG.pageCap && page>CFG.pageCap) break;
+        const soloPath=`/kills/solo/allianceID/${CFG.allianceID}/regionID/${CFG.regionID}/year/${Number(y)}/month/${Number(m)}/page/${page}/`;
+        statusEl.textContent=`solo ${y}-${m} p${page}…`;
+        const rows=await getZKB(soloPath);
+        if(!rows.length) break;
+
+        for(const row of rows){
+          const t=parseKillTime(row.killmail_time);
+          if(startDate && t && t<startDate) continue;
+
+          let src=row;
+          if(!Array.isArray(row.attackers)||row.attackers.length===0){
+            const km=await getESIKillmail(row.killmail_id,row?.zkb?.hash);
+            if(km) src=km;
+          }
+          const soloId=isSoloByTest(src,true);
+          if(soloId){ countTo(soloByPilot,soloId,1); nameIds.add(soloId); }
+        }
+
+        await sleep(Number(CFG.rateMs)||0);
+      }
     }
 
     statusEl.textContent='resolving names…';
     const idToName=await resolveNames(nameIds);
-    const render=(tbody,entries,fmt)=>{ const rows=entries.slice(0,10).map(([id,val],i)=>{ const name=idToName.get(Number(id))||String(id); const meta=charMeta.get(Number(id)); return `<tr><td>${rankHtml(i)}</td><td>${pilotCellHtml(id,name,meta)}</td><td class="right">${fmt(val)}</td></tr>`; }).join(''); tbody.innerHTML=rows||'<tr><td colspan="3" class="muted">no data</td></tr>'; };
+
+    const render=(tbody,entries,fmt)=>{
+      const rows=entries.slice(0,10).map(([id,val],i)=>{
+        const name=idToName.get(Number(id))||String(id);
+        const meta=charMeta.get(Number(id));
+        return `<tr><td>${rankHtml(i)}</td><td>${pilotCellHtml(id,name,meta)}</td><td class="right">${fmt(val)}</td></tr>`;
+      }).join('');
+      tbody.innerHTML=rows||'<tr><td colspan="3" class="muted">no data</td></tr>';
+    };
     render(iskTBody,[...iskByPilot.entries()].sort((a,b)=>b[1]-a[1]),v=>fmtISK(v));
     render(soloTBody,[...soloByPilot.entries()].sort((a,b)=>b[1]-a[1]),v=>fmtNum(v));
+
     statusEl.textContent=ABORT?'aborted':'done';
   }
 
   /* ---------- snapshot loader ---------- */
-  async function enrichMetaForTop(ids){ const tasks=[]; for(const id of ids){ if(charMeta.has(id)) continue; const cached=Cache.get(`meta:char:${id}`); if(cached){ charMeta.set(id,{corp:cached.corporation_id||null, alliance:cached.alliance_id||null}); continue; } tasks.push((async()=>{ const meta=await getCharMeta(id); if(meta) charMeta.set(id,{corp:meta.corporation_id||null, alliance:meta.alliance_id||null}); })()); } await Promise.all(tasks); }
-
-  function setFreshness(ts){
-    let cls='err', label='error';
-    if(!ts){ cls='err'; label='no data'; }
-    else {
-      const age = Date.now() - Date.parse(ts);
-      if (isNaN(age)) { cls='err'; label='bad time'; }
-      else if (age <= 30*60*1000) { cls='ok'; label='fresh'; }
-      else { cls='stale'; label='stale'; }
+  async function enrichMetaForTop(ids){
+    const tasks=[];
+    for(const id of ids){
+      if(charMeta.has(id)) continue;
+      const cached=Cache.get(`meta:char:${id}`);
+      if(cached){ charMeta.set(id,{corp:cached.corporation_id||null, alliance:cached.alliance_id||null}); continue; }
+      tasks.push((async()=>{ const meta=await getCharMeta(id); if(meta) charMeta.set(id,{corp:meta.corporation_id||null, alliance:meta.alliance_id||null}); })());
     }
-    ageBadge.classList.remove('ok','stale','err');
-    ageBadge.classList.add(cls);
-    ageBadge.textContent = label;
+    await Promise.all(tasks);
   }
 
   async function loadSnapshot(){
     statusEl.textContent='loading snapshot…';
     try{
-      const url=new URL('data/summary.json',location.href);
-      const res=await fetch(url.toString()+'?_='+Date.now(),{cache:'no-store'});
-      if(!res.ok){ statusEl.textContent=`snapshot error (${res.status}) — ${url.pathname}`; soloTBody.innerHTML='<tr><td colspan="3" class="muted">no snapshot</td></tr>'; iskTBody.innerHTML='<tr><td colspan="3" class="muted">no snapshot</td></tr>'; lastUpdateEl.textContent='n/a'; lastUpdateEl.classList.add('stale'); setFreshness(''); return; }
+      const res=await fetch('data/summary.json?_='+Date.now(),{cache:'no-store'});
+      if(!res.ok){
+        statusEl.textContent=`snapshot error (${res.status})`;
+        lastUpdateEl.textContent='n/a'; lastUpdateEl.className='badge err';
+        soloTBody.innerHTML='<tr><td colspan="3" class="muted">no snapshot</td></tr>';
+        iskTBody.innerHTML ='<tr><td colspan="3" class="muted">no snapshot</td></tr>';
+        return;
+      }
       const j=await res.json();
 
       iskKilledEl.textContent=fmtISK(j.totals.isk||0);
@@ -269,18 +345,33 @@
       const topIds=new Set([...(j.topSolo||[]).slice(0,10).map(x=>x.id), ...(j.topISK||[]).slice(0,10).map(x=>x.id)]);
       await enrichMetaForTop(topIds);
 
-      const renderSnap=(tbody,list,fmtVal,key)=>{ const rows=(list||[]).slice(0,10).map((row,i)=>{ const name=idToName.get(row.id)||String(row.id); const meta=charMeta.get(Number(row.id)); return `<tr><td>${rankHtml(i)}</td><td>${pilotCellHtml(row.id,name,meta)}</td><td class="right">${fmtVal(row[key])}</td></tr>`; }).join(''); tbody.innerHTML=rows||'<tr><td colspan="3" class="muted">no data</td></tr>'; };
+      const renderSnap=(tbody,list,fmtVal,key)=>{
+        const rows=(list||[]).slice(0,10).map((row,i)=>{
+          const name=idToName.get(row.id)||String(row.id);
+          const meta=charMeta.get(Number(row.id));
+          return `<tr><td>${rankHtml(i)}</td><td>${pilotCellHtml(row.id,name,meta)}</td><td class="right">${fmtVal(row[key])}</td></tr>`;
+        }).join('');
+        tbody.innerHTML=rows||'<tr><td colspan="3" class="muted">no data</td></tr>';
+      };
       renderSnap(soloTBody,j.topSolo,v=>fmtNum(v),'count');
       renderSnap(iskTBody, j.topISK, v=>fmtISK(v),'isk');
 
-      const ts=j.generatedAt||''; lastUpdateEl.textContent=ts||'n/a'; setFreshness(ts);
+      const ts=j.generatedAt||'';
+      lastUpdateEl.textContent=ts||'n/a';
+      const isStale = ts && (Date.now()-Date.parse(ts) > 30*60*1000);
+      lastUpdateEl.className = 'badge ' + (ts ? (isStale ? 'stale' : 'fresh') : 'err');
       statusEl.textContent=`done (snapshot @ ${ts||'n/a'})`;
-    }catch(e){ statusEl.textContent='snapshot error (network/JSON)'; console.error('snapshot load error:', e); setFreshness(''); }
+    }catch(e){
+      statusEl.textContent='snapshot error (network/JSON)';
+      lastUpdateEl.textContent='n/a'; lastUpdateEl.className='badge err';
+      console.error(e);
+    }
   }
 
-  /* ---------- admin visibility ---------- */
-  const ADMIN=new URLSearchParams(location.search).has('admin');
-  if(ADMIN) document.documentElement.classList.add('admin-on');
+  /* ---------- admin visibility (guard if module loads late) ---------- */
+  if (new URLSearchParams(location.search).has('admin') || localStorage.getItem('admin') === '1') {
+    document.documentElement.classList.add('admin-on');
+  }
 
   /* ---------- auto load + auto refresh ---------- */
   window.addEventListener('load', ()=>{ loadSnapshot(); setInterval(loadSnapshot, 10*60*1000); });
@@ -290,20 +381,30 @@
   document.getElementById('stop')?.addEventListener('click',()=>{ ABORT=true; statusEl.textContent='stopping…'; });
   document.getElementById('clear')?.addEventListener('click',()=>{ Cache.delPrefix('esi:km:'); Cache.delPrefix('name:'); Cache.delPrefix('meta:char:'); pagesEl.textContent='0'; namesEl.textContent='0'; rowsEl.textContent='0'; esiEl.textContent='0'; statusEl.textContent='cache cleared'; });
   document.getElementById('load')?.addEventListener('click',()=>{ loadSnapshot().catch(e=>{statusEl.textContent='snapshot error'; console.error(e);}); });
-  document.getElementById('refresh')?.addEventListener('click', async ()=>{
-    const gh = CFG.github || {}; // { owner, repo, workflow, ref }
-    const owner = gh.owner, repo = gh.repo, workflow = gh.workflow || 'build-summary.yml', ref = gh.ref || 'main';
-    const actionsPage = `https://github.com/${owner||'YOUR_OWNER'}/${repo||'YOUR_REPO'}/actions/workflows/${workflow}`;
-    try {
-      const token = localStorage.getItem('gh_token');
-      if (owner && repo && token) {
-        statusEl.textContent = 'dispatching workflow…';
-        const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflow}/dispatches`, {
-          method:'POST', headers:{ 'Accept':'application/vnd.github+json', 'Authorization':`Bearer ${token}` },
-          body: JSON.stringify({ ref })
-        });
-        if (res.ok) { statusEl.textContent = 'workflow dispatched — reloading snapshot soon…'; setTimeout(loadSnapshot, 30*1000); return; }
+
+  // Dispatch GitHub workflow to rebuild snapshot (needs localStorage.gh_token with 'workflow' scope)
+  async function dispatchWorkflow(){
+    try{
+      const gh = (await (await fetch('./site.json',{cache:'no-store'})).json()).github || {};
+      const token = localStorage.getItem('gh_token') || '';
+      if (!gh.owner || !gh.repo || !gh.workflow || !gh.ref) {
+        window.open(`https://github.com/${gh.owner||'OWNER'}/${gh.repo||'REPO'}/actions`, '_blank'); return;
       }
-    } catch {}
-    window.open(actionsPage, '_blank');
-  });
+      if (!token) {
+        window.open(`https://github.com/${gh.owner}/${gh.repo}/actions/workflows/${gh.workflow}`, '_blank'); return;
+      }
+      statusEl.textContent = 'dispatching workflow…';
+      const r = await fetch(`https://api.github.com/repos/${gh.owner}/${gh.repo}/actions/workflows/${gh.workflow}/dispatches`, {
+        method: 'POST',
+        headers: { 'authorization': `Bearer ${token}`, 'accept': 'application/vnd.github+json' },
+        body: JSON.stringify({ ref: gh.ref })
+      });
+      if (!r.ok) { statusEl.textContent = `dispatch failed (${r.status})`; return; }
+      statusEl.textContent = 'workflow dispatched; waiting…';
+      setTimeout(()=>loadSnapshot(), 45*1000);
+    }catch(e){ statusEl.textContent='dispatch error'; console.error(e); }
+  }
+  document.getElementById('refreshWF')?.addEventListener('click', dispatchWorkflow);
+</script>
+</body>
+</html>
