@@ -46,7 +46,8 @@
   button:hover { transform: translateY(-1px); border-color: rgba(122,162,255,.5); box-shadow: 0 8px 18px rgba(122,162,255,.25); }
   button#build, button#load { border-color: rgba(122,162,255,.5); background: linear-gradient(180deg, rgba(122,162,255,.18), rgba(122,162,255,.06)); }
   button#clear, button#stop { border-color: rgba(192,125,255,.35); background: linear-gradient(180deg, rgba(192,125,255,.14), rgba(192,125,255,.05)); }
-  .admin { display:none; } /* hidden unless ?admin=1 */
+  .admin { display: none; }
+  .admin-on .admin { display: inline-flex; } /* or inline-block */
 
   /* progress bar */
   .bar { height:10px; border-radius:999px; border:1px solid var(--border); background: rgba(255,255,255,.06); overflow:hidden; }
@@ -253,7 +254,7 @@
 
   /* --- admin visibility (off by default) --- */
   const ADMIN = new URLSearchParams(location.search).has('admin');
-  if (ADMIN) document.querySelectorAll('.admin').forEach(el => el.style.display = '');
+  if (ADMIN) document.documentElement.classList.add('admin-on');
 
   /* --- auto load + auto refresh (no clicks needed) --- */
   window.addEventListener('load', () => {
