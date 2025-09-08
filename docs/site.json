@@ -6,11 +6,11 @@
   "regionName": "Deklein",
   "from": "2025-09-01",
 
-  "rateMs": 400,
-  "pageCap": 50,
+  "rateMs": 300,
+  "pageCap": 100,
 
-  "esiRateMs": 250,
-  "esiCap": 400,          
+  "esiRateMs": 200,
+  "esiCap": 2000,          
   "esiCapSolo": 3000,     
 
   "github": {
