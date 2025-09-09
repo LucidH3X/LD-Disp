@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2025-09-09T02:01:55.614Z",
+  "generatedAt": "2025-09-09T02:41:23.230Z",
   "totals": {
-    "isk": 14174175815,
-    "ships": 189,
-    "goalPct": 2.8348351630739996
+    "isk": 14209589718,
+    "ships": 190,
+    "goalPct": 2.8419179435799995
   },
   "topISK": [
     {
@@ -363,6 +363,18 @@
       "isk": 37270059
     },
     {
+      "id": 2113866704,
+      "isk": 35413903
+    },
+    {
+      "id": 2113455371,
+      "isk": 35413903
+    },
+    {
+      "id": 2113713744,
+      "isk": 35413903
+    },
+    {
       "id": 96788499,
       "isk": 34680422
     },
@@ -581,9 +593,12 @@
     "2113191317": "q3rq3 rq23r2",
     "2113349101": "Sparrow Jake",
     "2113455144": "Gilgamesh of Uruk",
+    "2113455371": "Iskandar The Conqueror",
     "2113620610": "Admiral Rogue Gevera",
+    "2113713744": "Beowulf Geatish",
     "2113721926": "Yuu Wuu",
     "2113796405": "AnUglyHyena",
+    "2113866704": "Enkidu of Uruk",
     "2114280606": "Cn Oramara",
     "2114373585": "Hold this L",
     "2114468750": "Jason Hammersmith",
