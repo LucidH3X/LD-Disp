@@ -2,7 +2,7 @@
   "title": "TEST Alliance – Deployment Tracker",
   "allianceID": 498125261,
   "goalISK": 500000000000,
-  "regionID": 10000012,
+  
   "regions": [
     { "id": 10000012, "name": "Curse" },
     { "id": 10000046, "name": "Catch" }
@@ -23,5 +23,6 @@
     "ref": "main"
   }
 }
+
 
 
