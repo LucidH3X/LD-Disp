@@ -1,4 +1,3 @@
-// docs/site.json
 {
   "title": "TEST Alliance – Deployment Tracker",
   "allianceID": 498125261,
@@ -15,8 +14,8 @@
   "esiRateMs": 180,
   "esiCap": 4000,
 
-  "credit": "all",                 // per-pilot ISK credit: "all" (every TEST attacker) or "final"
-  "totalMetric": "destroyedValue", // totals/leaderboard metric: destroyedValue|totalValue|droppedValue|fittedValue
+  "credit": "all",                 
+  "totalMetric": "destroyedValue", 
   "excludeAwox": true,
   "excludeNPC": true,
   "minTotalISK": 0,
@@ -24,5 +23,6 @@
 
   "github": { "owner": "LucidH3X", "repo": "LD-Disp", "workflow": "build-summary.yml", "ref": "main" }
 }
+
 
 
