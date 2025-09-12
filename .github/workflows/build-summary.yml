@@ -2,40 +2,40 @@ name: Build summary
 
 on:
   schedule:
-    - cron: "*/10 * * * *"   # every 10 minutes
-  workflow_dispatch:
+    - cron: "*/30 * * * *"     # every 30 minutes (UTC)
+  workflow_dispatch:           # allow manual runs from Actions tab
 
 permissions:
   contents: write
 
+concurrency:
+  group: snapshot
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    concurrency:
-      group: build-summary
-      cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: Build JSON
-        run: node tools/build-summary.mjs
-
-      - name: Publish snapshot into docs
+      - name: Build snapshot
         run: |
-          mkdir -p docs/data
-          if [ -f data/summary.json ]; then
-            cp -f data/summary.json docs/data/summary.json
-          else
-            echo '{"generatedAt":"","totals":{"isk":0,"ships":0,"goalPct":0},"topISK":[],"topSolo":[],"names":{}}' > docs/data/summary.json
-          fi
+          node --version
+          node tools/build-summary.mjs
 
       - name: Commit snapshot
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/summary.json docs/data/summary.json
-          git commit -m "update summary [skip ci]" || echo "nothing to commit"
+          git commit -m "snapshot: $(date -u +'%Y-%m-%dT%H:%M:%SZ')" || echo "nothing to commit"
           git push
+
