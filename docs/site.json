@@ -2,9 +2,9 @@
   "title": "TEST Alliance – Deployment Tracker",
   "allianceID": 498125261,
   "goalISK": 500000000000,
-  "regionID": 10000035,
-  "regionName": "Deklein",
-  "from": "2025-09-01",
+  "regionID": 10000012,
+  "regionName": "Curse",
+  "from": "2025-09-11",
 
   "rateMs": 300,
   "pageCap": 100,
@@ -20,3 +20,4 @@
     "ref": "main"
   }
 }
+
