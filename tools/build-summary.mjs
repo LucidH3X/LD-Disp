@@ -24,7 +24,7 @@ const CFG_DEFAULT = {
   regionID: 10000014,
   regionName: "Catch",
 
-  from: "2025-09-11",   // STRICT START (UTC)
+  from: "2025-09-12",   // STRICT START (UTC)
 
   rateMs: 300,
   pageCap: 100,
@@ -216,6 +216,7 @@ main().catch(async e=>{
   await writeJSON(path.join(repoRoot, "docs", "data", "summary.json"), fallback);
   process.exitCode = 1;
 });
+
 
 
 
