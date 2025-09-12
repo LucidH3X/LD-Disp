@@ -1,29 +1,28 @@
+// docs/site.json
 {
   "title": "TEST Alliance – Deployment Tracker",
   "allianceID": 498125261,
   "goalISK": 500000000000,
+
   "regionID": 10000014,
   "regionName": "Catch",
+
   "from": "2025-09-12",
 
-  "rateMs": 300,
-  "pageCap": 100,
+  "rateMs": 250,
+  "pageCap": 150,
 
-  "esiRateMs": 200,
-  "esiCap": 2000,          
-  "esiCapSolo": 3000,     
+  "esiRateMs": 180,
+  "esiCap": 4000,
 
-  "github": {
-    "owner": "LucidH3X",
-    "repo": "LD-Disp",
-    "workflow": "build-summary.yml",
-    "ref": "main"
-  }
+  "credit": "all",                 // per-pilot ISK credit: "all" (every TEST attacker) or "final"
+  "totalMetric": "destroyedValue", // totals/leaderboard metric: destroyedValue|totalValue|droppedValue|fittedValue
+  "excludeAwox": true,
+  "excludeNPC": true,
+  "minTotalISK": 0,
+  "includeSoloOnly": false,
+
+  "github": { "owner": "LucidH3X", "repo": "LD-Disp", "workflow": "build-summary.yml", "ref": "main" }
 }
-
-
-
-
-
 
 
