@@ -1,6 +1,6 @@
 // tools/build-summary.mjs
-// Strict "from" window; never counts mails before CFG.from.
-// Reads ONLY docs/site.json to avoid config drift.
+// Strict window from CFG.from (inclusive), TEST-only counts, no early-stop, ESI fallback.
+// Per-pilot ISK credit via CFG.credit. Totals metric via CFG.totalMetric.
 
 import fs from "fs/promises";
 import path from "path";
@@ -20,24 +20,23 @@ const CFG_DEFAULT = {
   title: "TEST Alliance – Deployment Tracker",
   allianceID: 498125261,
   goalISK: 500_000_000_000,
-
   regionID: 10000014,
   regionName: "Catch",
-
-  from: "2025-09-12",   // STRICT START (UTC)
-
-  rateMs: 300,
-  pageCap: 100,
-
-  esiRateMs: 200,
-  esiCap: 2500,
-
-  credit: "final",      // "final" or "all" (doesn't affect total ISK, only per-pilot)
+  from: "2025-09-12",
+  rateMs: 250,
+  pageCap: 150,
+  esiRateMs: 180,
+  esiCap: 4000,
+  credit: "all",
+  totalMetric: "destroyedValue",
+  excludeAwox: true,
+  excludeNPC: true,
+  minTotalISK: 0,
+  includeSoloOnly: false,
   userAgent: null
 };
 
 async function loadCfg() {
-  // IMPORTANT: read ONLY docs/site.json so UI + builder use the same values
   const a = await readJSON(path.join(repoRoot, "docs", "site.json"));
   return { ...CFG_DEFAULT, ...(a || {}) };
 }
@@ -48,7 +47,6 @@ function monthList(from, to){
   while (A<=B){ out.push({ y:A.getUTCFullYear(), m:A.getUTCMonth()+1 }); A.setUTCMonth(A.getUTCMonth()+1); }
   return out;
 }
-
 const parseKillTime = (s) => {
   const raw = String(s || "");
   const iso = raw.includes("T") ? raw : raw.replace(" ", "T") + (raw.endsWith("Z") ? "" : "Z");
@@ -75,7 +73,7 @@ async function esiKillmail(id, hash, CFG){
   const r = await fetch(url, { headers: { "User-Agent": ua(CFG) } });
   if (!r.ok) return null;
   const j = await r.json().catch(() => null);
-  return j ? { attackers: Array.isArray(j.attackers) ? j.attackers : [] } : null;
+  return j || null;
 }
 async function esiNames(ids, CFG){
   if (!ids.length) return [];
@@ -91,7 +89,6 @@ async function esiNames(ids, CFG){
 
 function countTo(m, id, by=1){ m.set(id, (m.get(id)||0)+by); }
 const nonNpc = (atks) => (atks||[]).filter(a => a && a.character_id && !a.is_npc);
-
 function testersAll(src, aid){
   const atks = src?.attackers || [];
   return atks.filter(a => a?.character_id && !a.is_npc && a.alliance_id === aid).map(a => a.character_id);
@@ -113,63 +110,70 @@ function soloByAlliance(src, aid){
 async function main(){
   const CFG = await loadCfg();
   const startDate = CFG.from ? new Date(`${CFG.from}T00:00:00Z`) : null;
-  const now   = new Date();
+  const credit    = (CFG.credit || "all").toLowerCase();
+  const metricKey = (CFG.totalMetric || "destroyedValue");
+
+  const now = new Date();
   const months = monthList(startDate || now, now);
-  const regions = CFG.regionID ? [Number(CFG.regionID)] :
-                  (Array.isArray(CFG.regions) && CFG.regions.length ? CFG.regions.map(r=>Number(r.id)) : []);
+  const regions = CFG.regionID ? [Number(CFG.regionID)]
+                : (Array.isArray(CFG.regions) && CFG.regions.length ? CFG.regions.map(r=>Number(r.id)) : [null]);
 
   let totalISK=0, totalShips=0, esiCalls=0;
   const iskByPilot = new Map();
   const soloByPilot= new Map();
   const nameIds    = new Set();
-  const credit = (CFG.credit || "all").toLowerCase();
-
   let earliestCounted = null;
 
-  for (const {y, m} of months){
-    const rids = regions.length ? regions : [null]; // null => all regions
-    for (const rid of rids){
-      let stopMonth = false; // stop this year/month once we hit a kill older than startDate
-      for (let page=1; page <= (CFG.pageCap || 1000); page++){
-        if (stopMonth) break;
+  // debug
+  let pages=0, rowsSeen=0, rowsOlder=0, rowsNoTest=0, rowsFiltered=0, rowsCounted=0;
 
+  for (const {y, m} of months){
+    for (const rid of regions){
+      for (let page=1; page <= (CFG.pageCap || 1000); page++){
         const killsPath =
           `/kills/allianceID/${CFG.allianceID}` +
           (rid ? `/regionID/${rid}` : "") +
           `/year/${Number(y)}/month/${Number(m)}/page/${page}/`;
 
         const rows = await zkb(killsPath, CFG);
+        pages++;
         if (!rows.length) break;
 
         for (const row of rows){
-          const t = parseKillTime(row.killmail_time);
+          rowsSeen++;
 
-          // STRICT filter: skip & mark month done if older than startDate
-          if (startDate && t && t < startDate){ stopMonth = true; continue; }
+          let src = row;
+          const needESI = !row.killmail_time || !Array.isArray(row.attackers) || row.attackers.length === 0;
+          if (needESI && esiCalls < (CFG.esiCap ?? 0)){
+            const km = await esiKillmail(row.killmail_id, row?.zkb?.hash, CFG);
+            if (km) src = { ...row, ...km };
+            esiCalls++;
+            await sleep(CFG.esiRateMs || 0);
+          }
 
-          // defensive: if kill has no timestamp we ignore it
+          const t = parseKillTime(src.killmail_time);
+          if (startDate && t && t < startDate){ rowsOlder++; continue; }
           if (!t) continue;
+
+          const testersAny = testersAll(src, CFG.allianceID);
+          if (testersAny.length === 0){ rowsNoTest++; continue; }
+
+          const zk = row?.zkb || {};
+          if ((CFG.excludeAwox ?? true) && zk.awox) { rowsFiltered++; continue; }
+          if ((CFG.excludeNPC  ?? true) && zk.npc)  { rowsFiltered++; continue; }
+          if ((CFG.includeSoloOnly ?? false) && !soloByAlliance(src, CFG.allianceID)) { rowsFiltered++; continue; }
+
+          const value = Number(zk?.[metricKey] ?? zk?.totalValue ?? 0);
+          if (value < (CFG.minTotalISK ?? 0)) { rowsFiltered++; continue; }
 
           if (!earliestCounted || t < earliestCounted) earliestCounted = t;
 
-          // ---- ONLY AFTER TIME CHECK do we touch totals ----
-          const value = row?.zkb?.totalValue || 0;
-          totalISK  += value;
+          totalISK  += value;        // count kill ONCE in totals
           totalShips += 1;
+          rowsCounted++;
 
-          // need attackers to credit ISK + detect solo
-          let src = row;
-          if (!Array.isArray(row.attackers) || row.attackers.length === 0){
-            if (esiCalls < (CFG.esiCap ?? 0)){
-              const km = await esiKillmail(row.killmail_id, row?.zkb?.hash, CFG);
-              if (km) src = km;
-              esiCalls++;
-              await sleep(CFG.esiRateMs || 0);
-            }
-          }
-
-          const ids = credit === "final" ? testerFinal(src, CFG.allianceID) : testersAll(src, CFG.allianceID);
-          for (const id of ids){ countTo(iskByPilot, id, value); nameIds.add(id); }
+          const creditIds = credit === "final" ? testerFinal(src, CFG.allianceID) : testersAny;
+          for (const id of creditIds){ countTo(iskByPilot, id, value); nameIds.add(id); }
 
           const soloId = soloByAlliance(src, CFG.allianceID);
           if (soloId){ countTo(soloByPilot, soloId, 1); nameIds.add(soloId); }
@@ -180,7 +184,7 @@ async function main(){
     }
   }
 
-  // Names
+  // names
   const ids = [...nameIds].map(Number).filter(Boolean);
   const namesMap = {};
   for (let i=0; i<ids.length; i+=900){
@@ -197,9 +201,11 @@ async function main(){
 
   const summary = {
     generatedAt: nowISO(),
-    since: CFG.from,                               // sanity breadcrumb
+    since: CFG.from,
     earliestCountedAt: earliestCounted ? earliestCounted.toISOString() : null,
     creditMode: credit,
+    totalMetric: metricKey,
+    debug: { pages, rowsSeen, rowsOlder, rowsNoTest, rowsFiltered, rowsCounted, esiCalls },
     totals: { isk: Math.round(totalISK), ships: totalShips, goalPct: CFG.goalISK ? (totalISK/CFG.goalISK)*100 : 0 },
     topISK, topSolo, names: namesMap
   };
@@ -207,16 +213,14 @@ async function main(){
   await writeJSON(path.join(repoRoot, "data", "summary.json"), summary);
   await writeJSON(path.join(repoRoot, "docs", "data", "summary.json"), summary);
 
-  console.log(`Snapshot ok. since=${CFG.from} earliest=${summary.earliestCountedAt} ISK=${summary.totals.isk} ships=${summary.totals.ships}`);
+  console.log(`Snapshot ok. metric=${metricKey} since=${CFG.from} earliest=${summary.earliestCountedAt} pages=${pages} seen=${rowsSeen} older=${rowsOlder} noTest=${rowsNoTest} filtered=${rowsFiltered} counted=${rowsCounted} ESI=${esiCalls}`);
 }
 
 main().catch(async e=>{
   console.error("Builder failed:", e);
-  const fallback = { generatedAt: nowISO(), since: null, earliestCountedAt: null, creditMode: null, totals:{isk:0,ships:0,goalPct:0}, topISK:[], topSolo:[], names:{} };
+  const fallback = { generatedAt: nowISO(), since: null, earliestCountedAt: null, creditMode: null, totalMetric: null, debug:{}, totals:{isk:0,ships:0,goalPct:0}, topISK:[], topSolo:[], names:{} };
   await writeJSON(path.join(repoRoot, "docs", "data", "summary.json"), fallback);
   process.exitCode = 1;
 });
-
-
 
 
