@@ -4,7 +4,7 @@
   "goalISK": 500000000000,
   "regionID": 10000014,
   "regionName": "Catch",
-  "from": "2025-09-13",
+  "from": "2025-09-12",
 
   "rateMs": 300,
   "pageCap": 100,
@@ -20,6 +20,7 @@
     "ref": "main"
   }
 }
+
 
 
 
