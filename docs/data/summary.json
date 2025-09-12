@@ -1,14 +1,54 @@
 {
-  "generatedAt": "2025-09-12T20:29:12.907Z",
+  "generatedAt": "2025-09-12T20:38:16.770Z",
   "since": "2025-09-12",
-  "earliestCountedAt": null,
-  "creditMode": "final",
-  "totals": {
-    "isk": 0,
-    "ships": 0,
-    "goalPct": 0
+  "earliestCountedAt": "2025-09-12T13:56:52.000Z",
+  "creditMode": "all",
+  "totalMetric": "destroyedValue",
+  "debug": {
+    "pages": 2,
+    "rowsSeen": 43,
+    "rowsOlder": 35,
+    "rowsNoTest": 0,
+    "rowsFiltered": 0,
+    "rowsCounted": 8,
+    "esiCalls": 43
   },
-  "topISK": [],
-  "topSolo": [],
-  "names": {}
+  "totals": {
+    "isk": 898234873,
+    "ships": 8,
+    "goalPct": 0.17964697468599997
+  },
+  "topISK": [
+    {
+      "id": 91944625,
+      "isk": 455985714
+    },
+    {
+      "id": 2118606224,
+      "isk": 248779979
+    },
+    {
+      "id": 90447488,
+      "isk": 193469180
+    }
+  ],
+  "topSolo": [
+    {
+      "id": 91944625,
+      "count": 4
+    },
+    {
+      "id": 2118606224,
+      "count": 3
+    },
+    {
+      "id": 90447488,
+      "count": 1
+    }
+  ],
+  "names": {
+    "90447488": "Kiramati",
+    "91944625": "alphaS subA",
+    "2118606224": "Rogue-Planet"
+  }
 }
