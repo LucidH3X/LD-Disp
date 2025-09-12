@@ -21,9 +21,9 @@ const CFG_DEFAULT = {
   title: "TEST Alliance – Deployment Tracker",
   allianceID: 498125261,
   goalISK: 500_000_000_000,
-  regionID: 10000035,          // Deklein
-  regionName: "Deklein",
-  from: "2025-09-01",
+  regionID: 10000014,          // Deklein
+  regionName: "Catch",
+  from: "2025-09-012",
 
   rateMs: 300,                 // polite delay between zKB pages
   pageCap: 100,                // scan up to N pages per month
@@ -210,3 +210,4 @@ main().catch(async (e) => {
   await writeJSON(path.join(repoRoot, "docs", "data", "summary.json"), fallback);
   process.exitCode = 1;
 });
+
