@@ -7,20 +7,15 @@
 <meta name="color-scheme" content="dark light"/>
 <style>
   :root{
-    --bg: #0b0f1a;
-    --panel1: rgba(255,255,255,.06);
-    --panel2: rgba(255,255,255,.03);
-    --stroke: rgba(255,255,255,.12);
-    --muted: rgba(231,235,255,.78);
-    --fg: #e7ebff;
-    --accent: #8ab4ff;
-    --accent2:#6dd6ff;
-    --wrap: 1100px;
+    --bg:#0b0f1a; --fg:#e7ebff; --muted:rgba(231,235,255,.78);
+    --panel1:rgba(255,255,255,.06); --panel2:rgba(255,255,255,.03); --stroke:rgba(255,255,255,.12);
+    --accent:#8ab4ff; --accent2:#6dd6ff; --wrap:1100px;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
-  body{margin:0;background:radial-gradient(ellipse at 50% -10%, #101528 0%, #0b0f1a 35%, #060910 100%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Helvetica Neue,Arial,sans-serif}
-  /* starfield */
+  body{margin:0;background:radial-gradient(ellipse at 50% -10%, #101528 0%, var(--bg) 35%, #060910 100%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Helvetica Neue,Arial,sans-serif}
+
+  /* STARFIELD BACKGROUND */
   .stars{position:fixed;inset:0;z-index:-2;pointer-events:none}
   .stars:before,.stars:after{
     content:"";position:absolute;inset:0;opacity:.22;
@@ -32,8 +27,9 @@
   .stars:after{opacity:.16;transform:scale(1.25);filter:blur(.2px);animation-duration:10s}
   @keyframes twinkle{0%{opacity:.14}50%{opacity:.32}100%{opacity:.14}}
 
+  /* HEADER / CHIPS / BUTTONS */
   header{position:sticky;top:0;z-index:10;
-    background:linear-gradient(180deg, rgba(11,15,26,.85), rgba(11,15,26,.55));
+    background:linear-gradient(180deg, rgba(11,15,26,.92), rgba(11,15,26,.55));
     backdrop-filter: blur(8px);
     border-bottom:1px solid var(--stroke)
   }
@@ -53,6 +49,8 @@
     background:linear-gradient(180deg,#121a25,#0f1521);
     color:var(--fg);cursor:pointer
   }
+
+  /* PANELS / TABLES */
   main{padding:1rem 0 3rem}
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem}
   .card{
@@ -68,9 +66,11 @@
   th{font-weight:600;color:#cfe1ff}
   td.num{text-align:right}
   .empty{opacity:.65;font-style:italic}
-  .pilot{
-    display:flex;align-items:center;gap:.6rem;
-  }
+
+  /* PILOT CELL + CLICKABLE LINKS */
+  a.pilot{display:flex;align-items:center;gap:.6rem;color:inherit;text-decoration:none}
+  a.pilot:hover span{text-decoration:underline}
+  a.pilot:hover img{filter:brightness(1.1)}
   .pilot img{
     width:26px;height:26px;border-radius:50%;
     border:1px solid rgba(255,255,255,.18);
@@ -160,7 +160,7 @@ let CFG = {
 
 async function loadCfg(){
   try{
-    // prefer /docs/site.json (GH Pages), fallback /site.json for local dev
+    // Prefer GH Pages path; fall back to root for local dev
     let res = await fetch('./docs/site.json?ts='+Date.now(),{cache:'no-store'});
     if(!res.ok) res = await fetch('./site.json?ts='+Date.now(),{cache:'no-store'});
     const j = await res.json();
@@ -178,22 +178,23 @@ async function loadCfg(){
 
 function avatarUrl(id){
   const n = Number(id);
-  if(!n || !isFinite(n)) return '';
-  // ESI portrait service
-  return `https://images.evetech.net/characters/${n}/portrait?size=64`;
+  return (n && isFinite(n)) ? `https://images.evetech.net/characters/${n}/portrait?size=64` : '';
 }
+
+/* CLICKABLE pilot cell to zKill */
 function pilotCell(id, name){
-  const src = avatarUrl(id);
-  const img = src ? `<img src="${src}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'">` : '';
-  return `<div class="pilot">${img}<span>${name}</span></div>`;
+  const src  = avatarUrl(id);
+  const img  = src ? `<img src="${src}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'">` : '';
+  const href = `https://zkillboard.com/character/${Number(id)}/`;
+  return `<a class="pilot" href="${href}" target="_blank" rel="noopener noreferrer">${img}<span>${name}</span></a>`;
 }
+
 function medal(i){ return i===0?'🥇':i===1?'🥈':i===2?'🥉':''; }
 
 function renderTop(tbody, entries, getVal){
   const rows = (entries||[]).slice(0,10).map((r,i)=>{
-    const m = medal(i);
     return `<tr>
-      <td class="rank">${i+1} <span class="medal">${m}</span></td>
+      <td class="rank">${i+1} <span class="medal">${medal(i)}</span></td>
       <td>${pilotCell(r.id, r.name || r.n || r.id)}</td>
       <td class="num">${getVal(r)}</td>
     </tr>`;
@@ -217,11 +218,28 @@ async function loadSnapshot(){
     els.goalbar.style.width = pct+'%';
 
     const names = s.names || {};
-    const topISK  = (s.topISK || []).map(x => ({ id:x.id, isk:x.isk, name:names[x.id] || x.name || String(x.id)}));
-    const topSolo = (s.topSolo|| []).map(x => ({ id:x.id, count:x.count, name:names[x.id] || x.name || String(x.id)}));
+    const topISK  = (s.topISK || []).map(x => ({ id:x.id, isk:x.isk,   name:names[x.id] || x.name || String(x.id)}));
+    const topSolo = (s.topSolo|| []).map(x => ({ id:x.id, count:x.count,name:names[x.id] || x.name || String(x.id)}));
 
     renderTop(els.iskBody,  topISK,  r => fmtISK(r.isk||0));
     renderTop(els.soloBody, topSolo, r => fmtNum(r.count||0));
+
+    // admin chip (if you visit with ?admin=1)
+    if (new URL(location.href).searchParams.get('admin') === '1' && s.debug){
+      const dbg = s.debug;
+      const e = document.createElement('div');
+      e.className = 'wrap row';
+      e.innerHTML = `<span class="chip">zKB pages: ${dbg.pages ?? 0}</span>
+                     <span class="chip">Rows: ${dbg.rowsSeen ?? 0}</span>
+                     <span class="chip">Older: ${dbg.rowsOlder ?? 0}</span>
+                     <span class="chip">No TEST: ${dbg.rowsNoTest ?? 0}</span>
+                     <span class="chip">Filtered: ${dbg.rowsFiltered ?? 0}</span>
+                     <span class="chip">Counted: ${dbg.rowsCounted ?? 0}</span>
+                     <span class="chip">ESI calls: ${dbg.esiCalls ?? 0}</span>`;
+      const dv = document.createElement('div'); dv.style.marginTop = '-.5rem';
+      dv.appendChild(e);
+      document.querySelector('main').prepend(dv);
+    }
 
     els.status.textContent = 'done';
   }catch(e){
@@ -238,4 +256,5 @@ await loadSnapshot();
 </script>
 </body>
 </html>
+
 
