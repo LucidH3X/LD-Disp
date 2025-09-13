@@ -21,8 +21,11 @@
   "minTotalISK": 0,
   "includeSoloOnly": false,
 
+  "excludeTypes": [33475],
+  "excludeGroups": [],
+
+
   "github": { "owner": "LucidH3X", "repo": "LD-Disp", "workflow": "build-summary.yml", "ref": "main" }
 }
-
 
 

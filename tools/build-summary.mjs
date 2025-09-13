@@ -33,7 +33,10 @@ const CFG_DEFAULT = {
   excludeNPC: true,
   minTotalISK: 0,
   includeSoloOnly: false,
-  userAgent: null
+  userAgent: null,
+
+  // NEW: victim type filters (e.g., MTU 33475)
+  excludeTypes: []        // fill via docs/site.json, e.g. [33475]
 };
 
 async function loadCfg() {
@@ -107,8 +110,23 @@ function soloByAlliance(src, aid){
   return nn[0].alliance_id === aid ? nn[0].character_id : null;
 }
 
+// ------- victim filters (typeID) --------------------------------------------
+// Works with either zKB (victim.shipTypeID) or ESI (victim.ship_type_id)
+function victimType(src){
+  const v = src?.victim || null;
+  if (!v) return 0;
+  return Number(v.ship_type_id ?? v.shipTypeID ?? 0);
+}
+function isExcludedByVictim(src, EX_TYPES){
+  const t = victimType(src);
+  return t && EX_TYPES.has(t);
+}
+// ----------------------------------------------------------------------------
+
 async function main(){
   const CFG = await loadCfg();
+  const EX_TYPES = new Set((CFG.excludeTypes || []).map(Number)); // MTU: 33475
+
   const startDate = CFG.from ? new Date(`${CFG.from}T00:00:00Z`) : null;
   const credit    = (CFG.credit || "all").toLowerCase();
   const metricKey = (CFG.totalMetric || "destroyedValue");
@@ -143,7 +161,7 @@ async function main(){
           rowsSeen++;
 
           let src = row;
-          const needESI = !row.killmail_time || !Array.isArray(row.attackers) || row.attackers.length === 0;
+          const needESI = !row.killmail_time || !Array.isArray(row.attackers) || row.attackers.length === 0 || !row.victim;
           if (needESI && esiCalls < (CFG.esiCap ?? 0)){
             const km = await esiKillmail(row.killmail_id, row?.zkb?.hash, CFG);
             if (km) src = { ...row, ...km };
@@ -165,6 +183,9 @@ async function main(){
 
           const value = Number(zk?.[metricKey] ?? zk?.totalValue ?? 0);
           if (value < (CFG.minTotalISK ?? 0)) { rowsFiltered++; continue; }
+
+          // NEW: victim-type exclusions (e.g., MTU 33475)
+          if (isExcludedByVictim(src, EX_TYPES)) { rowsFiltered++; continue; }
 
           if (!earliestCounted || t < earliestCounted) earliestCounted = t;
 
@@ -222,5 +243,3 @@ main().catch(async e=>{
   await writeJSON(path.join(repoRoot, "docs", "data", "summary.json"), fallback);
   process.exitCode = 1;
 });
-
-
