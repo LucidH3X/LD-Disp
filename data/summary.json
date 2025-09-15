@@ -1,22 +1,22 @@
 {
-  "generatedAt": "2025-09-15T01:35:10.672Z",
+  "generatedAt": "2025-09-15T02:36:11.810Z",
   "since": "2025-09-12",
   "earliestCountedAt": "2025-09-12T13:56:52.000Z",
   "creditMode": "all",
   "totalMetric": "destroyedValue",
   "debug": {
     "pages": 2,
-    "rowsSeen": 87,
+    "rowsSeen": 88,
     "rowsOlder": 35,
     "rowsNoTest": 0,
     "rowsFiltered": 18,
-    "rowsCounted": 34,
-    "esiCalls": 87
+    "rowsCounted": 35,
+    "esiCalls": 88
   },
   "totals": {
-    "isk": 4412501661,
-    "ships": 34,
-    "goalPct": 0.882500332292
+    "isk": 4623959260,
+    "ships": 35,
+    "goalPct": 0.924791851902
   },
   "topISK": [
     {
@@ -60,6 +60,10 @@
       "isk": 996763867
     },
     {
+      "id": 2115701995,
+      "isk": 654734533
+    },
+    {
       "id": 95515028,
       "isk": 490957317
     },
@@ -100,8 +104,8 @@
       "isk": 450778280
     },
     {
-      "id": 2115701995,
-      "isk": 443276935
+      "id": 2118612871,
+      "isk": 443913499
     },
     {
       "id": 2121987180,
@@ -124,8 +128,12 @@
       "isk": 255265436
     },
     {
-      "id": 2118612871,
-      "isk": 232455901
+      "id": 2118683290,
+      "isk": 211457598
+    },
+    {
+      "id": 2118612897,
+      "isk": 211457598
     },
     {
       "id": 2118606224,
@@ -216,11 +224,11 @@
       "isk": 4118420
     },
     {
-      "id": 1328475031,
+      "id": 569759408,
       "isk": 10000
     },
     {
-      "id": 569759408,
+      "id": 1328475031,
       "isk": 10000
     }
   ],
@@ -296,6 +304,8 @@
     "2118443023": "Meldrysha Semdelis",
     "2118606224": "Rogue-Planet",
     "2118612871": "GarmurGirl Bathwater",
+    "2118612897": "Jump You Cowards",
+    "2118683290": "MaybeDreadBomb",
     "2119642376": "Flukz",
     "2119645808": "Fluxi",
     "2121380536": "Mog-Ri",
