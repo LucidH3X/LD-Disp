@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2025-09-16T08:09:36.606Z",
+  "generatedAt": "2025-09-16T08:40:27.899Z",
   "since": "2025-09-12",
   "earliestCountedAt": "2025-09-12T13:56:52.000Z",
   "creditMode": "all",
   "totalMetric": "destroyedValue",
   "debug": {
     "pages": 2,
-    "rowsSeen": 112,
+    "rowsSeen": 113,
     "rowsOlder": 35,
     "rowsNoTest": 0,
-    "rowsFiltered": 31,
+    "rowsFiltered": 32,
     "rowsCounted": 46,
-    "esiCalls": 112
+    "esiCalls": 113
   },
   "totals": {
     "isk": 5447324096,
@@ -208,11 +208,11 @@
       "isk": 68492920
     },
     {
-      "id": 92059194,
+      "id": 910158355,
       "isk": 68492920
     },
     {
-      "id": 910158355,
+      "id": 92059194,
       "isk": 68492920
     },
     {
