@@ -1,22 +1,22 @@
 {
-  "generatedAt": "2025-09-18T16:08:00.334Z",
+  "generatedAt": "2025-09-18T16:39:28.227Z",
   "since": "2025-09-12",
   "earliestCountedAt": "2025-09-12T13:56:52.000Z",
   "creditMode": "all",
   "totalMetric": "destroyedValue",
   "debug": {
     "pages": 2,
-    "rowsSeen": 171,
+    "rowsSeen": 173,
     "rowsOlder": 35,
     "rowsNoTest": 0,
     "rowsFiltered": 65,
-    "rowsCounted": 71,
-    "esiCalls": 171
+    "rowsCounted": 73,
+    "esiCalls": 173
   },
   "totals": {
-    "isk": 9309114753,
-    "ships": 71,
-    "goalPct": 1.8618229505360004
+    "isk": 9433695690,
+    "ships": 73,
+    "goalPct": 1.8867391380420009
   },
   "topISK": [
     {
@@ -25,7 +25,7 @@
     },
     {
       "id": 96392826,
-      "isk": 2741887305
+      "isk": 2811490673
     },
     {
       "id": 1913733427,
@@ -124,6 +124,10 @@
       "isk": 420073206
     },
     {
+      "id": 1794453589,
+      "isk": 383480969
+    },
+    {
       "id": 2119645808,
       "isk": 352338657
     },
@@ -142,10 +146,6 @@
     {
       "id": 93646377,
       "isk": 318730496
-    },
-    {
-      "id": 1794453589,
-      "isk": 313877600
     },
     {
       "id": 2114429096,
@@ -174,6 +174,10 @@
     {
       "id": 90447488,
       "isk": 193469180
+    },
+    {
+      "id": 120205143,
+      "isk": 124580938
     },
     {
       "id": 93510945,
@@ -298,6 +302,10 @@
       "count": 2
     },
     {
+      "id": 120205143,
+      "count": 1
+    },
+    {
       "id": 1865799213,
       "count": 1
     },
@@ -333,6 +341,7 @@
     "94175681": "Leonidus Cesaille",
     "95515028": "Jorge Enaka",
     "96392826": "Sharagoth",
+    "120205143": "SajuukThanatoskhar",
     "143893109": "Leutnant Odin",
     "222853530": "Sanoc",
     "443523026": "GoldSnake",
