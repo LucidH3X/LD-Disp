@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2025-09-23T20:37:53.113Z",
+  "generatedAt": "2025-09-23T21:07:02.933Z",
   "since": "2025-09-12",
   "earliestCountedAt": "2025-09-12T13:56:52.000Z",
   "creditMode": "all",
   "totalMetric": "destroyedValue",
   "debug": {
     "pages": 3,
-    "rowsSeen": 314,
+    "rowsSeen": 315,
     "rowsOlder": 35,
     "rowsNoTest": 0,
-    "rowsFiltered": 128,
+    "rowsFiltered": 129,
     "rowsCounted": 151,
-    "esiCalls": 314
+    "esiCalls": 315
   },
   "totals": {
     "isk": 17116989442,
