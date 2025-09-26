@@ -1,22 +1,22 @@
 {
-  "generatedAt": "2025-09-26T22:08:30.081Z",
+  "generatedAt": "2025-09-26T22:37:17.604Z",
   "since": "2025-09-12",
   "earliestCountedAt": "2025-09-12T13:56:52.000Z",
   "creditMode": "all",
   "totalMetric": "destroyedValue",
   "debug": {
     "pages": 4,
-    "rowsSeen": 426,
-    "rowsOlder": 35,
+    "rowsSeen": 427,
+    "rowsOlder": 36,
     "rowsNoTest": 0,
-    "rowsFiltered": 178,
-    "rowsCounted": 213,
-    "esiCalls": 426
+    "rowsFiltered": 177,
+    "rowsCounted": 214,
+    "esiCalls": 427
   },
   "totals": {
-    "isk": 23760904821,
-    "ships": 213,
-    "goalPct": 4.752180964200001
+    "isk": 23768127043,
+    "ships": 214,
+    "goalPct": 4.753625408654001
   },
   "topISK": [
     {
@@ -69,7 +69,7 @@
     },
     {
       "id": 2121380536,
-      "isk": 1998089511
+      "isk": 2005311733
     },
     {
       "id": 443523026,
@@ -412,6 +412,10 @@
     {
       "id": 2118606224,
       "count": 2
+    },
+    {
+      "id": 2121380536,
+      "count": 1
     },
     {
       "id": 92430987,
