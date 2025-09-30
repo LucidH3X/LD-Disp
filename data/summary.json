@@ -1,22 +1,22 @@
 {
-  "generatedAt": "2025-09-30T01:35:23.350Z",
+  "generatedAt": "2025-09-30T02:33:39.377Z",
   "since": "2025-09-12",
   "earliestCountedAt": "2025-09-12T13:56:52.000Z",
   "creditMode": "all",
   "totalMetric": "destroyedValue",
   "debug": {
     "pages": 4,
-    "rowsSeen": 446,
+    "rowsSeen": 448,
     "rowsOlder": 35,
     "rowsNoTest": 0,
     "rowsFiltered": 178,
-    "rowsCounted": 233,
-    "esiCalls": 446
+    "rowsCounted": 235,
+    "esiCalls": 448
   },
   "totals": {
-    "isk": 24578198653,
-    "ships": 233,
-    "goalPct": 4.915639730630001
+    "isk": 24696766646,
+    "ships": 235,
+    "goalPct": 4.939353329242
   },
   "topISK": [
     {
@@ -164,16 +164,16 @@
       "isk": 707520057
     },
     {
+      "id": 2116673624,
+      "isk": 698565292
+    },
+    {
       "id": 94162494,
       "isk": 698549573
     },
     {
       "id": 2115701995,
       "isk": 672493566
-    },
-    {
-      "id": 2116673624,
-      "isk": 666956238
     },
     {
       "id": 93304080,
@@ -324,6 +324,10 @@
       "isk": 102101081
     },
     {
+      "id": 766477495,
+      "isk": 86958940
+    },
+    {
       "id": 2116503388,
       "isk": 82415359
     },
@@ -454,6 +458,10 @@
       "count": 2
     },
     {
+      "id": 2116673624,
+      "count": 1
+    },
+    {
       "id": 94162494,
       "count": 1
     },
@@ -523,6 +531,7 @@
     "443523026": "GoldSnake",
     "569759408": "Tokey McBuds",
     "657854438": "Jagious",
+    "766477495": "Nuglord",
     "789508125": "Transipid",
     "820474900": "Vantera",
     "880910497": "Tow Bhar",
