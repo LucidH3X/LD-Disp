@@ -1,22 +1,22 @@
 {
-  "generatedAt": "2025-10-08T23:37:05.945Z",
+  "generatedAt": "2025-10-09T00:27:48.588Z",
   "since": "2025-09-12",
   "earliestCountedAt": "2025-09-12T13:56:52.000Z",
   "creditMode": "all",
   "totalMetric": "destroyedValue",
   "debug": {
     "pages": 6,
-    "rowsSeen": 488,
+    "rowsSeen": 489,
     "rowsOlder": 35,
     "rowsNoTest": 0,
     "rowsFiltered": 185,
-    "rowsCounted": 268,
-    "esiCalls": 488
+    "rowsCounted": 269,
+    "esiCalls": 489
   },
   "totals": {
-    "isk": 29401317343,
-    "ships": 268,
-    "goalPct": 5.880263468636001
+    "isk": 29408787912,
+    "ships": 269,
+    "goalPct": 5.881757582382002
   },
   "topISK": [
     {
@@ -89,7 +89,7 @@
     },
     {
       "id": 1382520819,
-      "isk": 2146025466
+      "isk": 2153496035
     },
     {
       "id": 2112549626,
@@ -184,12 +184,12 @@
       "isk": 698549573
     },
     {
-      "id": 1178739596,
-      "isk": 688920521
+      "id": 1706578369,
+      "isk": 693719640
     },
     {
-      "id": 1706578369,
-      "isk": 686249072
+      "id": 1178739596,
+      "isk": 688920521
     },
     {
       "id": 2115701995,
@@ -396,6 +396,10 @@
       "isk": 24290609
     },
     {
+      "id": 2113378333,
+      "isk": 7470569
+    },
+    {
       "id": 90402115,
       "isk": 4128420
     },
@@ -594,6 +598,7 @@
     "2112742263": "Yuri Levnik",
     "2113077807": "Panda Hibra",
     "2113191317": "q3rq3 rq23r2",
+    "2113378333": "Didhesayjump Fcsayswhat",
     "2113796405": "AnUglyHyena",
     "2114429096": "Luca Star",
     "2115519310": "Xarkon Arji",
